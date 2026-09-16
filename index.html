@@ -2,172 +2,452 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CONTAINMENT :: Lab 07</title>
+<title>SUB-GRID 07 :: CONTAINMENT VECTOR ARCHITECTURE</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Reliable CDN source for the A-Frame framework -->
+<!-- Primary 3D Virtual Engine Context Initialization Framework -->
 <script src="https://cloudflare.com"></script>
 <style>
-  :root{
-    --bg:#0c0f12;
-    --danger:#ff3b30;
-    --warn:#ffcc00;
-    --safe:#34c759;
-    --terminal:#00ff66;
+  :root {
+    --bg-darker: #05070a;
+    --bg-surface: #0f131a;
+    --bg-elevated: #161c26;
+    --border-glow: #243147;
+    --text-primary: #e2eaf5;
+    --text-secondary: #7f91a8;
+    --color-danger: #ff3b30;
+    --color-warning: #ffcc00;
+    --color-success: #34c759;
+    --color-cyan: #00f0ff;
+    --neon-terminal: #00ff66;
+    --terminal-glow: rgba(0, 255, 102, 0.25);
   }
-  html,body{margin:0;padding:0;background:var(--bg);overflow:hidden;height:100%;font-family:'Courier New', monospace;}
-  a-scene{width:100vw;height:100vh;}
 
-  #hud{position:fixed;inset:0;pointer-events:none;color:#e8edf0;z-index:5;}
-  #hud *{box-sizing:border-box;}
-  #meterBox{position:absolute;top:18px;left:18px;width:280px;background:#161d20dd;border:1px solid #3a4749;padding:10px 12px;border-radius:2px;}
-  #meterLabel{font-size:11px;letter-spacing:1px;color:#8ba3a6;display:flex;justify-content:space-between;margin-bottom:6px;}
-  #meterTrack{height:10px;width:100%;background:#0d1214;border:1px solid #222e30;position:relative;}
-  #meterFill{height:100%;width:0%;background:var(--safe);transition:width .4s ease, background .4s ease;}
-  
-  #stageBox{position:absolute;top:18px;right:18px;max-width:320px;text-align:right;background:#161d20dd;border:1px solid #3a4749;padding:10px 12px;font-size:11px;color:#8ba3a6;}
-  #stageBox b{color:#fff;display:block;font-size:12px;letter-spacing:.5px;margin-bottom:2px;}
-  
-  #objectiveBox{position:absolute;bottom:18px;left:18px;max-width:460px;background:#161d20dd;border-left:3px solid var(--warn);border-top:1px solid #3a4749;border-bottom:1px solid #3a4749;border-right:1px solid #3a4749;padding:10px 14px;font-size:13px;line-height:1.5;color:#e8edf0;opacity:0;transform:translateY(6px);transition:opacity .5s ease, transform .5s ease;}
-  #objectiveBox.show{opacity:1;transform:translateY(0);}
-  
-  #crosshair{
-    position:fixed;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
-    border-radius:50%;background:#ffffff;box-shadow: 0 0 8px #fff;
-    pointer-events:none;z-index:15;transition:background .1s ease, transform .1s ease;
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-darker);
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  #crosshair.hot{background:var(--terminal);transform:scale(1.8);box-shadow: 0 0 12px var(--terminal);}
 
-  #startHint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);color:#8ba3a6;font-size:12px;background:#161d20dd;border:1px solid #3a4749;padding:6px 14px;z-index:5;pointer-events:none;}
-  
-  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(10,15,17,.98);z-index:20;text-align:center;padding:40px;color:#eef2f3;}
-  .overlay.active{display:flex;}
-  .overlay h1{font-weight:700;font-size:32px;margin:0 0 14px 0;letter-spacing:1px;}
-  .overlay p{max-width:600px;color:#a7b8ba;font-size:14px;line-height:1.7;margin:0 0 22px 0;text-align:center;}
-  .overlay button, #enterBtn{font-family:'Courier New',monospace;background:transparent;color:#eef2f3;border:1px solid #3a4749;padding:12px 26px;font-size:13px;letter-spacing:1px;cursor:pointer;pointer-events:all;}
-  .overlay button:hover, #enterBtn:hover{background:var(--terminal);color:#12181a;border-color:var(--terminal);}
-  
-  #introOverlay h1{color:var(--warn);text-shadow: 0 0 10px rgba(255,204,0,0.3);}
-  #successOverlay h1{color:var(--safe);}
-
-  .modal{
-    display:none;position:fixed;inset:0;background:rgba(8,12,13,.9);z-index:30;
-    align-items:center;justify-content:center;pointer-events:all;
+  a-scene {
+    width: 100vw;
+    height: 100vh;
+    display: block;
   }
-  .modal.active{display:flex;}
-  .modalBox{background:#161d20;border:2px solid #3a4749;padding:24px 28px;width:360px;text-align:center;color:#dff2ef;box-shadow: 0 15px 40px rgba(0,0,0,0.8);}
-  .modalBox h2{margin:0 0 6px 0;font-size:14px;letter-spacing:1px;color:var(--terminal);}
-  .modalBox .sub{font-size:11px;color:#7a8f8d;margin-bottom:14px;line-height:1.5;}
-  .modalClose{margin-top:16px;background:none;border:none;color:#7a8f8d;font-size:12px;cursor:pointer;text-decoration:underline;pointer-events:all;}
 
-  /* Keypad UI Elements */
-  #pinDisplay{font-size:26px;letter-spacing:6px;background:#0d1214;border:1px solid #2a3537;padding:10px 0;margin-bottom:14px;color:var(--terminal);min-height:1.4em;}
-  #pinDisplay.wrong{color:var(--danger);}
-  #pinGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-  #pinGrid button{background:#222e30;color:#fff;border:1px solid #3a4749;padding:14px 0;font-size:18px;cursor:pointer;font-family:inherit;}
-  #pinGrid button:hover{background:var(--terminal);color:#000;}
+  /* HEADS UP DISPLAY SYSTEMS PLATFORM */
+  #hud-wrapper {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    color: var(--text-primary);
+    z-index: 5;
+    box-sizing: border-box;
+  }
 
-  /* Interactive Alignment Module */
-  #laserRow{display:flex;gap:14px;justify-content:center;margin:15px 0;}
-  .mirrorNode{width:65px;height:65px;background:#222e30;border:1px solid #3a4749;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;}
-  .mirrorNode:hover{border-color:var(--terminal);}
-  .mirrorArrow{font-size:22px;color:#fff;transition:transform 0.2s ease;}
-  .mirrorDeg{font-size:10px;color:#8ba3a6;margin-top:2px;}
-</style>
-</head>
-<body>
+  .hud-panel {
+    position: absolute;
+    background: rgba(15, 19, 26, 0.88);
+    border: 1px solid var(--border-glow);
+    padding: 12px 16px;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
 
-<div id="hud">
-  <div id="meterBox">
-    <div id="meterLabel"><span>REACTOR POWER LEVEL</span><span id="meterNum">0%</span></div>
-    <div id="meterTrack"><div id="meterFill"></div></div>
-  </div>
-  <div id="stageBox">
-    <b id="stageTitle">SYSTEM INITIALIZING</b>
-    <span id="stageDesc">Calibrate core systems to prevent lockout sequence.</span>
-  </div>
-  <div id="objectiveBox">Locate the main access terminals using your crosshair reticle. Click terminals to open interactive subsystems.</div>
-</div>
+  #hud-left {
+    top: 20px;
+    left: 20px;
+    width: 320px;
+  }
 
-<div id="crosshair"></div>
-<div id="startHint">CLICK SCREEN TO LOCK MOUSE AND LOOK AROUND</div>
+  .hud-title-row {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
 
-<!-- GAME STATES OVERLAYS -->
-<div id="introOverlay" class="overlay active">
-  <h1>LAB 07 CONTAINMENT FAILURE</h1>
-  <p>The stabilization fields are decoupling. You must bypass the sub-station encryption matrices using the environment clues left behind by the field engineers. Teachers will be left completely baffled by this security configuration.</p>
-  <button id="enterBtn" onclick="startGame()">INITIALIZE PROTOCOL</button>
-</div>
+  .progress-container {
+    height: 12px;
+    width: 100%;
+    background: #07090d;
+    border: 1px solid #1f293a;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+  }
 
-<div id="successOverlay" class="overlay">
-  <h1>CONTAINMENT ARCHITECTURE SECURED</h1>
-  <p>System metrics stabilized successfully. The containment grid is locked down and the core loop is neutralized.</p>
-  <button onclick="location.reload()">RELOAD CORE SIMULATION</button>
-</div>
+  #hud-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-cyan), var(--color-success));
+    transition: width 0.5s cubic-bezier(0.1, 0.8, 0.3, 1);
+    box-shadow: 0 0 8px var(--color-cyan);
+  }
 
-<!-- MODAL 1: CRYPTIC CODES KEYPAD TERMINAL -->
-<div id="keypadModal" class="modal">
-  <div class="modalBox">
-    <h2>CONSOLE TRANSCRIPT ALPHA</h2>
-    <div class="sub">Decrypt sequence. Clue on wall hints: "First atomic number of Noble gases multiplied by atomic count of Carbon in Glucose."</div>
-    <div id="pinDisplay"></div>
-    <div id="pinGrid">
-      <button onclick="pressPin('1')">1</button><button onclick="pressPin('2')">2</button><button onclick="pressPin('3')">3</button>
-      <button onclick="pressPin('4')">4</button><button onclick="pressPin('5')">5</button><button onclick="pressPin('6')">6</button>
-      <button onclick="pressPin('7')">7</button><button onclick="pressPin('8')">8</button><button onclick="pressPin('9')">9</button>
-      <button onclick="clearPin()" style="color:var(--danger)">CLR</button><button onclick="pressPin('0')">0</button><button onclick="submitPin()" style="color:var(--safe)">ENT</button>
-    </div>
-    <button class="modalClose" onclick="closeAllModals()">[DISCONNECT TERMINAL]</button>
-  </div>
-</div>
+  #hud-right {
+    top: 20px;
+    right: 20px;
+    width: 340px;
+    text-align: right;
+  }
 
-<!-- MODAL 2: INTERACTIVE MIRROR NODE TERMINAL -->
-<div id="mirrorModal" class="modal">
-  <div class="modalBox">
-    <h2>OPTICAL REFRACTOR ARRAY</h2>
-    <div class="sub">Align light conduits. Look closely at the rotation hint sequence hidden on the control room walls!</div>
-    <div id="laserRow">
-      <div class="mirrorNode" onclick="rotateMirror(0)">
-        <div id="arr0" class="mirrorArrow">↑</div><div id="deg0" class="mirrorDeg">0°</div>
-      </div>
-      <div class="mirrorNode" onclick="rotateMirror(1)">
-        <div id="arr1" class="mirrorArrow">↑</div><div id="deg1" class="mirrorDeg">0°</div>
-      </div>
-      <div class="mirrorNode" onclick="rotateMirror(2)">
-        <div id="arr2" class="mirrorArrow">↑</div><div id="deg2" class="mirrorDeg">0°</div>
-      </div>
-    </div>
-    <button class="modalClose" onclick="closeAllModals()">[DISCONNECT TERMINAL]</button>
-  </div>
-</div>
+  #hud-right b {
+    color: #ffffff;
+    display: block;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
 
-<a-scene renderer="colorManagement: true;">
-  <!-- Camera Rigging -->
-  
-    <a-camera look-controls="pointerLockEnabled: true" wasd-controls="acceleration: 65">
-      <a-cursor visible="false" raycaster="objects: .interactable"></a-cursor>
-    </a-camera>
-  
+  #hud-right span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: block;
+    line-height: 1.4;
+  }
 
-  <!-- ENVIRONMENT DECORATIONS & STRUCTURAL INDUSTRIAL WALLS -->
-  <a-sky color="#05080c"></a-sky>
-  <a-plane position="0 -0.05 0" rotation="-90 0 0" width="30" height="30" color="#11161b"></a-plane>
-  
-  <!-- Structural Laboratory Pillars -->
-  <a-box position="-6 3 -6" width="1.5" height="7" depth="1.5" color="#1b232a"></a-box>
-  <a-box position="6 3 -6" width="1.5" height="7" depth="1.5" color="#1b232a"></a-box>
-  <a-box position="-6 3 6" width="1.5" height="7" depth="1.5" color="#1b232a"></a-box>
-  <a-box position="6 3 6" width="1.5" height="7" depth="1.5" color="#1b232a"></a-box>
+  #hud-bottom-left {
+    bottom: 20px;
+    left: 20px;
+    max-width: 500px;
+    border-left: 4px solid var(--color-warning);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    opacity: 0;
+    transform: translateY(10px);
+  }
 
-  <!-- High-voltage Ceiling Pipes & Aesthetic Accents -->
-  <a-cylinder position="0 6 -3" rotation="0 0 90" radius="0.15" height="15" color="#e67e22"></a-cylinder>
-  <a-cylinder position="0 5.8 2" rotation="0 0 90" radius="0.08" height="15" color="#3498db"></a-cylinder>
-  <a-cylinder position="-3 3 -7.9" rotation="90 0 0" radius="0.2" height="6" color="#2c3e50"></a-cylinder>
-  
-  <!-- Cryptic Code Equations on the Room Walls -->
-  
-    <a-box width="3.2" height="0.8" depth="0.05" color="#161d20"></a-box>
-    <a-text value="HE x (C6_H12_O6)" position="-1.5 0 0.04" color="#ffcc00" width="6"></a-text>
-  
+  #hud-bottom-left.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-  
-    <a-box width="2.5" height="0.8" depth="0.05" color="#161d20"></a-box>
+  .objective-header {
+    font-size: 12px;
+    color: var(--color-warning);
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .objective-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+
+  #hud-timer-panel {
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
+    text-align: center;
+    border: 1px solid rgba(255, 59, 48, 0.3);
+  }
+
+  .timer-label {
+    font-size: 10px;
+    color: var(--color-danger);
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+  }
+
+  #countdown-display {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--color-danger);
+    text-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+  }
+
+  /* SYSTEM POINTER TARGET CROSSHAIR RETICLE */
+  #crosshair-element {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+    z-index: 10;
+    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    display: none;
+  }
+
+  #crosshair-element.visible {
+    display: block;
+  }
+
+  #crosshair-element.active-target {
+    background: var(--neon-terminal);
+    transform: scale(2);
+    box-shadow: 0 0 14px var(--neon-terminal);
+  }
+
+  #mouse-lock-prompt {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-secondary);
+    font-size: 12px;
+    background: rgba(15, 19, 26, 0.95);
+    border: 1px solid var(--border-glow);
+    padding: 8px 18px;
+    border-radius: 3px;
+    z-index: 5;
+    pointer-events: none;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  /* GLOBAL OVERLAY SCREEN ARCHITECTURE */
+  .system-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: rgba(5, 7, 10, 0.98);
+    z-index: 100;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-primary);
+  }
+
+  .system-overlay.active {
+    display: flex;
+  }
+
+  .system-overlay h1 {
+    font-size: 38px;
+    margin: 0 0 16px 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .system-overlay p {
+    max-width: 680px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.8;
+    margin: 0 0 32px 0;
+  }
+
+  .action-trigger-btn {
+    font-family: 'Courier New', monospace;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-glow);
+    padding: 14px 32px;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .action-trigger-btn:hover {
+    background: var(--neon-terminal);
+    color: var(--bg-darker);
+    border-color: var(--neon-terminal);
+    box-shadow: 0 0 16px var(--terminal-glow);
+  }
+
+  #initialization-screen h1 {
+    color: var(--color-warning);
+    text-shadow: 0 0 12px rgba(255, 204, 0, 0.4);
+  }
+
+  #neutralization-screen h1 {
+    color: var(--color-success);
+    text-shadow: 0 0 12px rgba(52, 199, 89, 0.4);
+  }
+
+  #termination-screen h1 {
+    color: var(--color-danger);
+    text-shadow: 0 0 12px rgba(255, 59, 48, 0.4);
+  }
+
+  /* MODAL OPERATIONAL DIALOG FRAMEWORKS */
+  .terminal-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 6, 9, 0.92);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+  }
+
+  .terminal-modal-backdrop.active {
+    display: flex;
+  }
+
+  .modal-hardware-enclosure {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-glow);
+    padding: 28px 36px;
+    width: 440px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+    position: relative;
+  }
+
+  .modal-hardware-enclosure h2 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+    color: var(--neon-terminal);
+    text-transform: uppercase;
+    text-shadow: 0 0 6px var(--terminal-glow);
+  }
+
+  .modal-hardware-enclosure .diagnostic-subtext {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .terminal-abort-btn {
+    margin-top: 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .terminal-abort-btn:hover {
+    color: var(--color-danger);
+  }
+
+  /* MATRIX INPUT SUBSYSTEM: NUMERIC PAD */
+  #keypad-io-window {
+    font-size: 28px;
+    letter-spacing: 8px;
+    background: #06090d;
+    border: 1px solid #1f293a;
+    padding: 12px 0;
+    margin-bottom: 18px;
+    color: var(--neon-terminal);
+    min-height: 1.4em;
+    border-radius: 4px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+  }
+
+  #keypad-io-window.denied-pulse {
+    color: var(--color-danger);
+    animation: flash-error 0.2s ease 2;
+  }
+
+  #keypad-io-window.accepted-pulse {
+    color: var(--color-success);
+  }
+
+  @keyframes flash-error {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
+  .keypad-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .keypad-grid-layout button {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-glow);
+    padding: 16px 0;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .keypad-grid-layout button:hover {
+    background: var(--border-glow);
+    border-color: var(--text-secondary);
+  }
+
+  .keypad-grid-layout button:active {
+    background: var(--neon-terminal);
+    color: var(--bg-darker);
+  }
+
+  /* OPTICAL ARRAY ALIGNMENT LAYER */
+  .optical-conduit-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  .refractor-node-casing {
+    width: 85px;
+    height: 85px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-glow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .refractor-node-casing:hover {
+    border-color: var(--color-cyan);
+    background: rgba(0, 240, 255, 0.05);
+  }
+
+  .refractor-vector-indicator {
+    font-size: 28px;
+    color: #ffffff;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .refractor-angular-value {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* LOGIC CRYPT SEQUENCE MATRIX DECRYPTOR */
+  .crypt-input-sequence {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 15px 0;
+  }
+
+  .crypt-char-node {
+    flex: 1;
+    height: 48px;
+Use code with caution.background: #06090d;border: 1px solid var(--border-glow);color: var(--color-cyan);font-size: 22px;font-weight: bold;display: flex;align-items: center;justify-content: center;border-radius: 4px;cursor: pointer;}.crypt-char-node:hover {border-color: var(--color-cyan);}/* BINARY BRIDGE TOGGLE CONTROL MATRIX */.binary-matrix-grid {display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;margin: 15px 0;}.binary-toggle-switch {height: 44px;background: #06090d;border: 1px solid var(--border-glow);color: var(--text-secondary);font-size: 16px;font-weight: bold;display: flex;align-items: center;justify-content: center;border-radius: 4px;cursor: pointer;transition: all 0.2s;}.binary-toggle-switch.state-active {background: rgba(0, 255, 102, 0.15);border-color: var(--neon-terminal);color: var(--neon-terminal);box-shadow: 0 0 8px rgba(0, 255, 102, 0.2);}/* RESISTANCE GRID NODE SLIDER PANEL */.frequency-slider-assembly {margin: 20px 0;text-align: left;}.slider-channel-row {margin-bottom: 12px;}.slider-channel-row label {display: flex;justify-content: space-between;font-size: 11px;color: var(--text-secondary);margin-bottom: 4px;}.slider-channel-row input[type="range"] {width: 100%;background: var(--bg-elevated);accent-color: var(--color-warning);cursor: pointer;}CONTAINMENT FIELD METER0%SYSTEM INITIALIZINGDecrypt structural data vectors to isolate structural leaks.CURRENT VECTOR OBJECTIVEAnalyze environment arrays to resolve substation processing blockades.CORE VENT CLOSE15:00CLICK CANVAS PLATFORM TO ENGAGE DETECTIVE VISIONVECTOR ISOLATION BLOCKADEEmergency warning protocols active inside containment grid 07. The terminal matrices have auto-encrypted using structural environment telemetry data footprints logged by field technicians. Teachers will be utterly paralyzed by this mathematical isolation layout.ENGAGE INTERFACECONTAINMENT BALANCEDAll core relays reporting functional parity metrics. The energy breach fields are stabilized, locking down the terminal grid parameters.RE-RUN INFRASTRUCTURE SIMULATIONGRID DECOUPLING INITIATEDCore stabilization operations breached time tolerances. Substation structures automated lockdown protocols permanently.FORCE REBOOT ATTEMPTDECRYPTION CODES: NODE ALPHAIsolate numeric code: Multiply the atomic sequence number of the first elemental Noble Gas by the structural Carbon atomic metric contained within standard molecular Glucose formulas.123456789CLR0ENT[DISENGAGE INTERACTION]OPTICAL REFRACTOR ROUTERAlign refractor paths. Trace directional matrix indices sequence notation stamped inside server cluster wall configurations.↑0°↑0°↑0°[DISENGAGE INTERACTION]CRYPTOGRAPHIC ALPHA CORESToggle individual nodes to spell out the sequence solution. Clue hidden under station base: "Opposite of failure, matching lab standard objective titles."AAAAAA[DISENGAGE INTERACTION]BINARY NETWORK STABILISERBypass grid locks by flipping registers. Clue text: "Convert the numerical age requirement for standard driver verification parameters into an 8-bit true sequence." (Age: 16)00000000[DISENGAGE INTERACTION]FREQUENCY HARMONIZER BLOCKModulate slider values to capture perfect core ratios. The target values are determined by: [Light Pipes Count] for Node A, and [Main Laboratory Pillar Count] for Node B.NODE RESISTANCE R-A0NODE RESISTANCE R-B0[DISENGAGE INTERACTION]//---------------------------------------------------------// GLOBAL APPLICATION ENGINE VARIABLES & STATES//---------------------------------------------------------let gameActive = false;let activeOverlay = true;let scoreMetricAccumulator = 0;let activeDialogBackdrop = null;let globalTickerTime = 900; // 15:00 In Total Sequential Secondslet tickerIntervalThread = null;// SYSTEM OBJECTIVE CONFIGURATION DICTIONARIESconst operationalObjectives = ["Locate Node Alpha. Access numeric keypad array code logs.","Bypass Route Array Beta. Calibrate refractor rotation conduits.","Decompile Gamma Matrix Cores. Target sequence strings verification.","Resolve Switchboard Delta registers. Translate driver metric binary bounds.","Tune Epsilon Harmonizer sliders. Match ambient lab item quantities.","Grid balanced. Advance immediately to the Extraction Safety Zone to lock down configuration runtime."];// STAGE COMPLETION FLAGS DETECTOR METRICSlet stationCompletionStates = {alpha: false,beta: false,gamma: false,delta: false,epsilon: false};//---------------------------------------------------------// SYNTHETIC INTERACTION SOUND SYSTEM GENERATOR CORE (WEB AUDIO API)//---------------------------------------------------------const SoundGeneratorEngine = {audioContextCtx: null,initializeContext: function() {if (!this.audioContextCtx) {this.audioContextCtx = new (window.AudioContext || window.webkitAudioContext)();}},playBeepTone: function(frequency, duration, type = 'sine') {this.initializeContext();if (!this.audioContextCtx) return;const osc = this.audioContextCtx.createOscillator();const gainNode = this.audioContextCtx.createGain();osc.type = type;osc.frequency.value = frequency;gainNode.gain.setValueAtTime(0.12, this.audioContextCtx.currentTime);gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContextCtx.currentTime + duration);osc.connect(gainNode);gainNode.connect(this.audioContextCtx.destination);osc.start();osc.stop(this.audioContextCtx.currentTime + duration);},triggerInputTone: function() { this.playBeepTone(880, 0.08, 'sine'); },triggerSuccessTone: function() {this.playBeepTone(587.33, 0.1, 'triangle');setTimeout(() => this.playBeepTone(880, 0.2, 'triangle'), 100);},triggerFailureTone: function() {this.playBeepTone(220, 0.25, 'sawtooth');setTimeout(() => this.playBeepTone(147, 0.3, 'sawtooth'), 150);}};//---------------------------------------------------------// LIFECYCLE MANAGEMENT IMPLEMENTATION PIPELINES//---------------------------------------------------------function executeSystemBoot() {document.getElementById("initialization-screen").classList.remove("active");document.getElementById("crosshair-element").classList.add("visible");document.getElementById("hud-bottom-left").classList.add("active");gameActive = true;activeOverlay = false;// Fire synthetic alert context engineSoundGeneratorEngine.playBeepTone(440, 0.15, 'sine');// Trigger full browser lock mechanism frame safelyconst primarySceneEl = document.querySelector('a-scene');if (primarySceneEl.canvas) {primarySceneEl.canvas.requestPointerLock();} else {primarySceneEl.addEventListener('render-target-loaded', () => {primarySceneEl.canvas.requestPointerLock();});}// Spin engine loop ticker clockinitializeClockCountdown();refreshObjectiveFeedTracker(0);// Track dynamic mouse prompt setup temporary layerconst canvasHintNode = document.getElementById("mouse-lock-prompt");canvasHintNode.style.opacity = 1;setTimeout(() => { canvasHintNode.style.opacity = 0; }, 4500);}function initializeClockCountdown() {tickerIntervalThread = setInterval(() => {if (!gameActive) return;globalTickerTime--;let minutes = Math.floor(globalTickerTime / 60);let seconds = globalTickerTime % 60;seconds = seconds < 10 ? "0" + seconds : seconds;document.getElementById("countdown-display").innerText = ${minutes}:${seconds};if (globalTickerTime <= 0) {triggerFacilityFailureLockdown();}}, 1000);}function triggerFacilityFailureLockdown() {gameActive = false;clearInterval(tickerIntervalThread);document.exitPointerLock();hideActiveSystemDialogs();document.getElementById("termination-screen").classList.add("active");SoundGeneratorEngine.triggerFailureTone();}function triggerFacilityVictorySequence() {gameActive = false;clearInterval(tickerIntervalThread);document.exitPointerLock();hideActiveSystemDialogs();document.getElementById("neutralization-screen").classList.add("active");SoundGeneratorEngine.triggerSuccessTone();}function modifyContainmentParity(deltaAmount) {scoreMetricAccumulator = Math.min(100, Math.max(0, scoreMetricAccumulator + deltaAmount));document.getElementById("hud-progress-fill").style.width = scoreMetricAccumulator + "%";document.getElementById("hud-percentage-metric").innerText = scoreMetricAccumulator + "%";}function refreshObjectiveFeedTracker(index) {document.getElementById("objective-body-text").innerText = operationalObjectives[index];document.getElementById("hud-operation-status").innerText = PHASE VECTOR 0${index + 1};}//---------------------------------------------------------// SPATIAL CURSOR & CLICK TARGET BINDING CONTEXTS//---------------------------------------------------------document.addEventListener('DOMContentLoaded', () => {const rayCursorNode = document.querySelector('a-cursor');const visualCrosshairWidget = document.getElementById('crosshair-element');// Attach activation sizing parameters hooksrayCursorNode.addEventListener('mouseenter', () => {if (gameActive && !activeDialogBackdrop) {visualCrosshairWidget.classList.add('active-target');}});rayCursorNode.addEventListener('mouseleave', () => {if (gameActive && !activeDialogBackdrop) {visualCrosshairWidget.classList.remove('active-target');}});// Hardware click router mappingsdocument.getElementById('physical-node-alpha').addEventListener('click', () => {evaluateNodeAccessAuthorization('alpha', 'modal-station-alpha');});document.getElementById('physical-node-beta').addEventListener('click', () => {evaluateNodeAccessAuthorization('beta', 'modal-station-beta');});document.getElementById('physical-node-gamma').addEventListener('click', () => {evaluateNodeAccessAuthorization('gamma', 'modal-station-gamma');});document.getElementById('physical-node-delta').addEventListener('click', () => {evaluateNodeAccessAuthorization('delta', 'modal-station-delta');});document.getElementById('physical-node-epsilon').addEventListener('click', () => {evaluateNodeAccessAuthorization('epsilon', 'modal-station-epsilon');});// Cradle proximity validation check mapping hookdocument.getElementById('extraction-cradle-rig').addEventListener('click', () => {validateExtractionCradleProximity();});// Secondary recovery safety lock tracking if screen cleareddocument.querySelector('a-scene').addEventListener('click', () => {if (gameActive && !activeDialogBackdrop) {document.querySelector('a-scene').canvas.requestPointerLock();}});});function evaluateNodeAccessAuthorization(nodeKey, modalTargetId) {if (!gameActive) return;if (stationCompletionStates[nodeKey]) {SoundGeneratorEngine.triggerInputTone();return;}presentSystemDialog(modalTargetId);}function presentSystemDialog(modalId) {document.exitPointerLock();hideActiveSystemDialogs();activeDialogBackdrop = document.getElementById(modalId);activeDialogBackdrop.classList.add('active');document.getElementById('crosshair-element').style.display = 'none';}function terminateModalTransactions() {hideActiveSystemDialogs();}function hideActiveSystemDialogs() {if (activeDialogBackdrop) {activeDialogBackdrop.classList.remove('active');activeDialogBackdrop = null;document.getElementById('crosshair-element').style.display = 'block';setTimeout(() => {if (gameActive) document.querySelector('a-scene').canvas.requestPointerLock();}, 150);}}//---------------------------------------------------------// SUB-STATION INTERACTIVE OPERATIONS DECKS MAPPED CALCULATIONS//---------------------------------------------------------// DECK ALPHA OPERATIONAL STORAGE PIPELINESlet keypadPayloadBuffer = "";const alphaCorrectCodePassphrase = "12"; // Helium Atomic Key (2) * Glucose Carbon atoms metric count (6) = 12function appendKeypadDigit(digitChar) {SoundGeneratorEngine.triggerInputTone();if (keypadPayloadBuffer.length < 6) {keypadPayloadBuffer += digitChar;document.getElementById("keypad-io-window").innerText = keypadPayloadBuffer;}}function purgeKeypadDigits() {SoundGeneratorEngine.triggerInputTone();keypadPayloadBuffer = "";const frame = document.getElementById("keypad-io-window");frame.innerText = "";frame.classList.remove("denied-pulse");}function validateKeypadMatrix() {const windowFrame = document.getElementById("keypad-io-window");if (keypadPayloadBuffer === alphaCorrectCodePassphrase) {stationCompletionStates.alpha = true;windowFrame.classList.add("accepted-pulse");windowFrame.innerText = "PARITY OK";SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-alpha").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(1);}, 1000);} else {SoundGeneratorEngine.triggerFailureTone();windowFrame.classList.add("denied-pulse");windowFrame.innerText = "DENIED";setTimeout(() => { purgeKeypadDigits(); }, 1200);}}// DECK BETA OPERATIONAL STORAGE PIPELINESlet currentConduitVectors =;const targetConduitVectorsSolution =; // 90, 180, 270 alignment index positions mapping stringsfunction toggleConduitVector(vectorIndex) {SoundGeneratorEngine.triggerInputTone();currentConduitVectors[vectorIndex] = (currentConduitVectors[vectorIndex] + 1) % 4;const mechanicalRotationDegrees = currentConduitVectors[vectorIndex] * 90;const DOMArrowNode = document.getElementById(vector-arrow-${vectorIndex});DOMArrowNode.style.transform = rotate(${mechanicalRotationDegrees}deg);document.getElementById(vector-deg-${vectorIndex}).innerText = mechanicalRotationDegrees + "°";if (JSON.stringify(currentConduitVectors) === JSON.stringify(targetConduitVectorsSolution)) {stationCompletionStates.beta = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-beta").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(2);}, 1000);}}// DECK GAMMA OPERATIONAL STORAGE PIPELINESlet alphaCryptUserArray = ['A', 'A', 'A', 'A', 'A', 'A'];const targetCryptSequenceSolution = ['S', 'U', 'C', 'C', 'E', 'S']; // Reverse string decryption map solution cluefunction cycleCryptCharacter(indexPosition) {SoundGeneratorEngine.triggerInputTone();let currentCharCodeAscii = alphaCryptUserArray[indexPosition].charCodeAt(0);currentCharCodeAscii++;if (currentCharCodeAscii > 90) currentCharCodeAscii = 65; // Bound roll loop constraint limitalphaCryptUserArray[indexPosition] = String.fromCharCode(currentCharCodeAscii);document.getElementById(crypt-char-${indexPosition}).innerText = alphaCryptUserArray[indexPosition];if (JSON.stringify(alphaCryptUserArray) === JSON.stringify(targetCryptSequenceSolution)) {stationCompletionStates.gamma = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-gamma").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(3);}, 1000);}}// DECK DELTA OPERATIONAL STORAGE PIPELINESlet activeBinaryRegistersArray =;const targetBinarySolutionPattern =; // Binary translation calculation value array representation for value 16function toggleBinaryBit(registerBitIndex) {SoundGeneratorEngine.triggerInputTone();activeBinaryRegistersArray[registerBitIndex] = activeBinaryRegistersArray[registerBitIndex] === 0 ? 1 : 0;const DOMButtonNode = document.getElementById(bin-switch-${registerBitIndex});DOMButtonNode.innerText = activeBinaryRegistersArray[registerBitIndex];if (activeBinaryRegistersArray[registerBitIndex] === 1) {DOMButtonNode.classList.add("state-active");} else {DOMButtonNode.classList.remove("state-active");}if (JSON.stringify(activeBinaryRegistersArray) === JSON.stringify(targetBinarySolutionPattern)) {stationCompletionStates.delta = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-delta").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(4);}, 1000);}}// DECK EPSILON OPERATIONAL STORAGE PIPELINESconst targetResistanceSliderValA = 3; // Equivalent to ceiling context light pipe elements countconst targetResistanceSliderValB = 4; // Equivalent to layout laboratory corner structural support pillars countfunction processSliderAdjustment() {SoundGeneratorEngine.triggerInputTone();const currentValA = parseInt(document.getElementById("freq-slider-a").value);const currentValB = parseInt(document.getElementById("freq-slider-b").value);document.getElementById("slider-val-lbl-a").innerText = currentValA;document.getElementById("slider-val-lbl-b").innerText = currentValB;if (currentValA === targetResistanceSliderValA && currentValB === targetResistanceSliderValB) {stationCompletionStates.epsilon = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-epsilon").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(5);}, 1000);}}//---------------------------------------------------------// WIN CONDITION: CRADLE ZONE COORDINATE PARITY VALIDATOR//---------------------------------------------------------function validateExtractionCradleProximity() {if (!gameActive) return;// Check if every encryption sub-station has logged complete validation indicatorsconst pathBalanced = Object.values(stationCompletionStates).every(state => state === true);if (pathBalanced) {// Pull dynamic vectors coordinates from look-control rigging engine pathsconst playerCoordinatesPosition = document.getElementById("player-rig").getAttribute("position");// Verify alignment parameters boundaries match extraction field coordinates constraintsconst horizontalBoundMatch = Math.abs(playerCoordinatesPosition.x) <= 2.25;const longitudinalBoundMatch = Math.abs(playerCoordinatesPosition.z - 3.5) <= 1.5;if (horizontalBoundMatch && longitudinalBoundMatch) {triggerFacilityVictorySequence();} else {SoundGeneratorEngine.triggerInputTone();// Fire proximity displacement notification alerts to structural text logsdocument.getElementById("hud-instruction-feed").innerText = "POSITION DISPLACED: Step entirely inside the green boundary perimeter line.";setTimeout(() => {document.getElementById("hud-instruction-feed").innerText = "Run metrics confirmation sequence by stepping into Extraction Cradle.";}, 3000);}} else {SoundGeneratorEngine.triggerInputTone();document.getElementById("hud-instruction-feed").innerText = "ACCESS REJECTED: Decrypt all 5 sub-station terminals before requesting extraction routing.";setTimeout(() => {document.getElementById("hud-instruction-feed").innerText = "Calibrate core systems to prevent lockout sequence parameters.";}, 3000);}}
