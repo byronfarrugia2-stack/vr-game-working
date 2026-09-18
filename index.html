@@ -2,452 +2,1292 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SUB-GRID 07 :: CONTAINMENT VECTOR ARCHITECTURE</title>
+<title>CONTAINMENT :: Lab 07</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Primary 3D Virtual Engine Context Initialization Framework -->
-<script src="https://cloudflare.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-master.min.js"></script>
 <style>
-  :root {
-    --bg-darker: #05070a;
-    --bg-surface: #0f131a;
-    --bg-elevated: #161c26;
-    --border-glow: #243147;
-    --text-primary: #e2eaf5;
-    --text-secondary: #7f91a8;
-    --color-danger: #ff3b30;
-    --color-warning: #ffcc00;
-    --color-success: #34c759;
-    --color-cyan: #00f0ff;
-    --neon-terminal: #00ff66;
-    --terminal-glow: rgba(0, 255, 102, 0.25);
+  :root{
+    --bg:#eef2f3;
+    --danger:#e0293c;
+    --warn:#c9820a;
+    --safe:#1f9d5c;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);overflow:hidden;height:100%;font-family:Arial,Helvetica,sans-serif;}
+  a-scene{width:100vw;height:100vh;}
+
+  #loadError{display:none;position:fixed;inset:0;background:#12181a;color:#e8edf0;z-index:999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px;}
+  #loadError.show{display:flex;}
+  #loadError h1{color:#ff5e5e;font-size:22px;margin-bottom:12px;}
+  #loadError p{max-width:560px;line-height:1.6;color:#bcccce;font-size:14px;}
+  #loadError code{background:#1c2b2c;padding:2px 6px;border-radius:3px;color:#9fe8c9;}
+  #loadError a{color:#5ec8ff;}
+
+  #hud{position:fixed;inset:0;pointer-events:none;font-family:'Courier New', monospace;color:#12181a;z-index:5;}
+  #hud *{box-sizing:border-box;}
+  #meterBox{position:absolute;top:18px;left:18px;width:280px;background:#ffffffee;border:1px solid #b7c0c4;padding:10px 12px;border-radius:2px;}
+  #meterLabel{font-size:11px;letter-spacing:1px;color:#5a6a6c;display:flex;justify-content:space-between;margin-bottom:6px;}
+  #meterTrack{height:10px;width:100%;background:#e0e6e8;border:1px solid #b7c0c4;position:relative;}
+  #meterFill{height:100%;width:0%;background:var(--safe);transition:width .4s ease, background .4s ease;}
+  #stageBox{position:absolute;top:18px;right:18px;max-width:320px;text-align:right;background:#ffffffee;border:1px solid #b7c0c4;padding:10px 12px;font-size:11px;color:#5a6a6c;}
+  #stageBox b{color:#12181a;display:block;font-size:12px;letter-spacing:.5px;margin-bottom:2px;}
+  #objectiveBox{position:absolute;bottom:18px;left:18px;max-width:460px;background:#ffffffee;border-left:3px solid var(--warn);padding:10px 14px;font-size:13px;line-height:1.5;color:#12181a;opacity:0;transform:translateY(6px);transition:opacity .5s ease, transform .5s ease;}
+  #objectiveBox.show{opacity:1;transform:translateY(0);}
+  #toast{position:absolute;bottom:70px;left:50%;transform:translateX(-50%) translateY(10px);background:#12181aee;color:#eef2f3;border:1px solid #333;padding:6px 14px;font-size:12px;opacity:0;transition:opacity .3s ease, transform .3s ease;white-space:nowrap;max-width:80vw;text-overflow:ellipsis;overflow:hidden;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  #crosshair{
+    position:fixed;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;
+    border-radius:50%;background:#ffffff;border:2px solid #12181a;
+    pointer-events:none;z-index:15;transition:background .1s ease, transform .1s ease, border-color .1s ease;
+  }
+  #crosshair.hot{background:#1f9d5c;border-color:#1f9d5c;transform:scale(1.45);}
+  #crosshair.hidden{display:none;}
+
+  #flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;z-index:6;}
+  #startHint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-family:'Courier New',monospace;color:#5a6a6c;font-size:12px;background:#ffffffee;border:1px solid #b7c0c4;padding:6px 14px;z-index:5;pointer-events:none;}
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(10,15,17,.95);z-index:20;text-align:center;padding:40px;font-family:'Courier New',monospace;color:#eef2f3;}
+  .overlay.active{display:flex;}
+  .overlay h1{font-weight:700;font-size:clamp(24px,5vw,40px);margin:0 0 14px 0;letter-spacing:.5px;}
+  .overlay p{max-width:600px;color:#a7b8ba;font-size:15px;line-height:1.7;margin:0 0 22px 0;text-align:left;}
+  .overlay button, #enterBtn{font-family:'Courier New',monospace;background:transparent;color:#eef2f3;border:1px solid #eef2f3;padding:12px 26px;font-size:13px;letter-spacing:1px;cursor:pointer;pointer-events:all;}
+  .overlay button:hover, #enterBtn:hover{background:#eef2f3;color:#12181a;}
+  #introOverlay h1{color:#ff5e5e;}
+  #failOverlay h1{color:#ff5e5e;}
+  #successOverlay h1{color:#3ddc8a;}
+  #secretOverlay h1{color:#ffb020;}
+
+  .modal{
+    display:none;position:fixed;inset:0;background:rgba(8,12,13,.85);z-index:30;
+    align-items:center;justify-content:center;font-family:'Courier New',monospace;
+  }
+  .modal.active{display:flex;}
+  .modalBox{background:#12181a;border:1px solid #3a4749;padding:24px 28px;width:320px;text-align:center;color:#dff2ef;}
+  .modalBox h2{margin:0 0 4px 0;font-size:14px;letter-spacing:1px;color:#9fe8c9;}
+  .modalBox .sub{font-size:11px;color:#7a8f8d;margin-bottom:14px;line-height:1.5;}
+  .modalClose{margin-top:14px;background:none;border:none;color:#7a8f8d;font-family:'Courier New',monospace;font-size:11px;cursor:pointer;text-decoration:underline;}
+
+  #pinDisplay{font-size:26px;letter-spacing:10px;background:#0a1012;border:1px solid #3a4749;padding:10px 0;margin-bottom:14px;color:#3ddc8a;min-height:1.4em;}
+  #pinDisplay.wrong{color:#ff5e5e;}
+  #pinGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px;}
+  #pinGrid button{font-family:'Courier New',monospace;font-size:18px;padding:12px 0;background:#1c2b2c;color:#dff2ef;border:1px solid #3a4749;cursor:pointer;}
+  #pinGrid button:hover{background:#2a3f40;}
+
+  #logBox{text-align:left;width:340px;}
+  #logBox p{font-size:13px;line-height:1.6;color:#c3d4d2;margin:0;white-space:pre-line;}
+
+  #hintBox{text-align:left;width:380px;max-height:70vh;overflow-y:auto;}
+  #hintBox p{font-size:12px;line-height:1.6;color:#c3d4d2;margin:0 0 12px 0;white-space:pre-line;}
+  #hintBox b{color:#9fe8c9;}
+
+  #scopeCircle{
+    position:relative;width:270px;height:190px;margin:0 auto 10px auto;border-radius:50%;overflow:hidden;
+    background:radial-gradient(circle, #143026 0%, #0a1a14 70%, #050c09 100%);
+    border:4px solid #1c2b2c;
+  }
+  #scopeGrids{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:22px;}
+  .scopeDigit{display:grid;grid-template-columns:repeat(3,11px);grid-auto-rows:11px;gap:4px;}
+  .scopeDot{width:11px;height:11px;border-radius:50%;background:transparent;}
+  .scopeDot.on{background:#5ef2a0;box-shadow:0 0 6px #5ef2a0;}
+  .scopeNoise{position:absolute;border-radius:50%;background:rgba(94,242,160,.32);}
+
+  #scanGrid{display:grid;grid-template-columns:repeat(3,54px);grid-gap:8px;justify-content:center;margin-bottom:10px;}
+  .scanCell{width:54px;height:54px;background:#1c2b2c;border:1px solid #3a4749;color:#7a8f8d;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .scanCell:hover{background:#2a3f40;}
+  .scanCell.done{background:#1f9d5c;color:#eef2f3;}
+  .scanCell.wrong{background:#e0293c;color:#eef2f3;}
+
+  #stabDisplay{font-size:36px;background:#0a1012;border:1px solid #3a4749;padding:10px 0;margin-bottom:12px;color:#3ddc8a;}
+  #stabDisplay.wrong{color:#ff5e5e;}
+  .modalBtnRow{display:flex;gap:8px;justify-content:center;}
+  .modalBtnRow button{font-family:'Courier New',monospace;font-size:13px;padding:10px 18px;background:#1c2b2c;color:#dff2ef;border:1px solid #3a4749;cursor:pointer;}
+  .modalBtnRow button:hover{background:#2a3f40;}
+
+  #laserRow{display:flex;gap:22px;justify-content:center;margin-bottom:6px;}
+  .laserMirrorWrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .laserMirror{width:56px;height:56px;background:#1c2b2c;border:1px solid #3a4749;display:flex;align-items:center;justify-content:center;font-size:26px;color:#5ec8ff;cursor:pointer;}
+  .laserMirror:hover{background:#2a3f40;}
+  .laserMirror .arrow{display:inline-block;transition:transform .2s ease;}
+  .laserDeg{font-size:10px;color:#7a8f8d;}
+</style>
+</head>
+<body>
+
+<div id="loadError">
+  <h1>3D LIBRARY FAILED TO LOAD</h1>
+  <p>This page needs the A-Frame library from a CDN, and it did not load — almost always caused by a network filter, firewall, or ad-blocker blocking <code>cdn.jsdelivr.net</code>. This is not a bug in the page itself.</p>
+  <p>Try: disabling any ad-blocker/VPN for this page, switching networks, or opening <a href="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-master.min.js" target="_blank" rel="noopener">this link</a> directly to test it.</p>
+</div>
+
+<div id="hud">
+  <div id="meterBox">
+    <div id="meterLabel"><span>CONTAMINATION</span><span id="meterPct">0%</span></div>
+    <div id="meterTrack"><div id="meterFill"></div></div>
+  </div>
+  <div id="stageBox"><b id="stageName">SYSTEM BOOT</b><span id="stageHint">Initializing containment lab…</span></div>
+  <div id="objectiveBox"></div>
+  <div id="toast"></div>
+</div>
+<div id="crosshair"></div>
+
+<div id="startHint" style="display:none;">Move the mouse/trackpad to look around (no need to hold click) · WASD to move · click to interact</div>
+<div id="flash"></div>
+
+<div id="introOverlay" class="overlay active">
+  <h1>LAB 07 — CONTAINMENT BREACH</h1>
+  <p>
+    Nexonyx Biotech, Sublevel 4. 03:14.<br><br>
+    Dr. Alden Voss ran gene-splicing trials on an unlisted subject — logged only as "Subject 07" —
+    without clearance from the safety board. Forty minutes ago the containment pod cracked.
+    Automated systems failed. External comms went dark. You're the technician they sent in,
+    because you were the only one still on-site.<br><br>
+    Restore power, stabilize the sample, and reach the containment override before contamination
+    seals the room for good. The incident board by the door is clickable for hints if you get stuck —
+    but the real clues are scattered through the lab.
+  </p>
+  <button id="enterBtn">ENTER THE LAB</button>
+</div>
+
+<div id="failOverlay" class="overlay">
+  <h1>CONTAINMENT LOST</h1>
+  <p>Contamination reached 100%. The outer door seals automatically. Whatever Voss was hiding down here, it stays hidden — and so do you.</p>
+  <button onclick="location.reload()">RESTART</button>
+</div>
+
+<div id="successOverlay" class="overlay">
+  <h1>CONTAINMENT RESTORED</h1>
+  <p>Override accepted. The blast door grinds open. You make it out before the seal fails — Voss's notes still burning a hole in your pocket.</p>
+  <button onclick="location.reload()">RESTART</button>
+</div>
+
+<div id="secretOverlay" class="overlay">
+  <h1>"SUBJECT 07 RECOGNISED."</h1>
+  <p>
+    The lights fade to amber as the containment lasers shut down, not in failure but in
+    acknowledgement. The system isn't unlocking the door for you — <em>Subject 07 is</em>.<br><br>
+
+    A hidden tag flashes across a nearby terminal: <code>PROFILE MATCH: DONOR-LINEAGE</code>.
+    Voss's fragmented notes finally make sense. Subject 07 wasn't built from random samples;
+    it was stabilised using a genomic scaffold taken from one technician — you.<br><br>
+
+    Every puzzle you solved wasn't just an override sequence. It was the lab confirming your
+    identity, checking if the person who created the stabilising pattern had returned.<br><br>
+
+    Whatever Subject 07 has become, it recognises you as its origin point. The door was never
+    meant to keep you out — only everyone else.
+  </p>
+  <button onclick="location.reload()">RESTART</button>
+</div>
+
+
+<div id="pinModal" class="modal">
+  <div class="modalBox">
+    <h2>OVERRIDE TERMINAL</h2>
+    <div class="sub">ENTER 4-DIGIT ACCESS CODE</div>
+    <div id="pinDisplay">____</div>
+    <div id="pinGrid">
+      <button data-d="1">1</button><button data-d="2">2</button><button data-d="3">3</button>
+      <button data-d="4">4</button><button data-d="5">5</button><button data-d="6">6</button>
+      <button data-d="7">7</button><button data-d="8">8</button><button data-d="9">9</button>
+      <button id="pinBackspace">⌫</button><button data-d="0">0</button><button id="pinSubmit">↵</button>
+    </div>
+    <button class="modalClose" id="pinClose">close terminal</button>
+  </div>
+</div>
+
+<div id="logModal" class="modal">
+  <div class="modalBox" id="logBox">
+    <h2 id="logTitle">LOG ENTRY</h2>
+    <p id="logBody"></p>
+    <button class="modalClose" id="logClose">close</button>
+  </div>
+</div>
+
+<div id="hintModal" class="modal">
+  <div class="modalBox" id="hintBox">
+    <h2>INCIDENT BOARD — HINTS</h2>
+    <div class="sub">A bit more detail than the index cards. Still not the exact answers.</div>
+    <p id="hintBody"></p>
+    <button class="modalClose" id="hintClose">close</button>
+  </div>
+</div>
+
+<div id="scopeModal" class="modal">
+  <div class="modalBox">
+    <h2>MICROSCOPE — CULTURE SLIDE</h2>
+    <div class="sub">The colonies didn't grow like this on their own. Look closely.</div>
+    <div id="scopeCircle"><div id="scopeGrids"></div></div>
+    <div class="sub">(this looks deliberate — override code, digits 3-4?)</div>
+    <button class="modalClose" id="scopeClose">close</button>
+  </div>
+</div>
+
+<div id="scanModal" class="modal">
+  <div class="modalBox">
+    <h2>HAND SCANNER</h2>
+    <div class="sub">Touch the panel in the sequence from the security memo.</div>
+    <div id="scanGrid"></div>
+    <button class="modalClose" id="scanClose">close</button>
+  </div>
+</div>
+
+<div id="stabModal" class="modal">
+  <div class="modalBox">
+    <h2>STABILISER PRESSURE</h2>
+    <div class="sub">Set the pressure to the value from the maintenance note.</div>
+    <div id="stabDisplay">0</div>
+    <div class="modalBtnRow">
+      <button id="stabDec">-1</button>
+      <button id="stabInc">+1</button>
+      <button id="stabSet">SET</button>
+    </div>
+    <button class="modalClose" id="stabClose">close</button>
+  </div>
+</div>
+
+<div id="laserModal" class="modal">
+  <div class="modalBox">
+    <h2>LASER ALIGNMENT</h2>
+    <div class="sub">Click a mirror to rotate it 90°. Match the optics note, then confirm.</div>
+    <div id="laserRow"></div>
+    <div class="modalBtnRow"><button id="laserConfirm">CONFIRM</button></div>
+    <button class="modalClose" id="laserClose">close</button>
+  </div>
+</div>
+
+<a-scene id="scene" background="color: #cfd8dc" renderer="physicallyCorrectLights: false">
+
+  <a-assets>
+    <audio id="sfx-alarm"   src="assets/audio/alarm.mp3"   preload="auto"></audio>
+    <audio id="sfx-voice"   src="assets/audio/voice-intro.mp3" preload="auto"></audio>
+    <audio id="sfx-bang"    src="assets/audio/bang.mp3"    preload="auto"></audio>
+    <audio id="sfx-error"   src="assets/audio/error.mp3"   preload="auto"></audio>
+    <audio id="sfx-success" src="assets/audio/success.mp3" preload="auto"></audio>
+    <audio id="sfx-glitch"  src="assets/audio/glitch.mp3"  preload="auto"></audio>
+  </a-assets>
+
+  <a-entity id="rig" position="0 1.6 4" movement-controls="fly:false">
+    <a-camera look-controls="pointerLockEnabled: true" wasd-controls="acceleration:60">
+      <a-cursor id="cursor" raycaster="objects: .clickable; far: 20"
+        material="opacity:0" geometry="radiusInner: 0.001; radiusOuter: 0.002"></a-cursor>
+    </a-camera>
+  </a-entity>
+
+  <a-entity id="ambientLight" light="type: ambient; intensity: 0.9; color: #ffffff"></a-entity>
+  <a-entity id="mainLight" light="type: point; intensity: 1; color: #ffffff; distance: 25" position="0 4.5 0"></a-entity>
+  <a-entity id="redLight1" light="type: point; intensity: 0; color: #ff2b3d; distance: 10" position="-4 2.5 -3"></a-entity>
+  <a-entity id="redLight2" light="type: point; intensity: 0; color: #ff2b3d; distance: 10" position="4 2.5 2"></a-entity>
+
+  <a-plane rotation="-90 0 0" width="14" height="14" material="color:#b7c0c4; shader:flat"></a-plane>
+  <a-plane rotation="90 0 0" position="0 5 0" width="14" height="14" material="color:#f5f7f8; shader:flat"></a-plane>
+  <a-plane position="0 2.5 -7" width="14" height="5" material="color:#dfe6e8; shader:flat"></a-plane>
+  <a-plane position="0 2.5 7" rotation="0 180 0" width="14" height="5" material="color:#dfe6e8; shader:flat"></a-plane>
+  <a-plane position="-7 2.5 0" rotation="0 90 0" width="14" height="5" material="color:#d3dcdf; shader:flat"></a-plane>
+  <a-plane position="7 2.5 0" rotation="0 -90 0" width="14" height="5" material="color:#d3dcdf; shader:flat"></a-plane>
+
+  <!-- wainscoting band on each wall -->
+  <a-plane position="0 0.9 -6.99" width="14" height="0.5" material="color:#c7d0d2; shader:flat"></a-plane>
+  <a-plane position="0 0.9 6.99" rotation="0 180 0" width="14" height="0.5" material="color:#c7d0d2; shader:flat"></a-plane>
+  <a-plane position="-6.99 0.9 0" rotation="0 90 0" width="14" height="0.5" material="color:#bcc6c8; shader:flat"></a-plane>
+  <a-plane position="6.99 0.9 0" rotation="0 -90 0" width="14" height="0.5" material="color:#bcc6c8; shader:flat"></a-plane>
+
+  <a-plane position="-3 4.95 -3" rotation="90 0 0" width="2" height="0.6" material="color:#ffffff; shader:flat"></a-plane>
+  <a-plane position="3 4.95 -3" rotation="90 0 0" width="2" height="0.6" material="color:#ffffff; shader:flat"></a-plane>
+  <a-plane position="-3 4.95 3" rotation="90 0 0" width="2" height="0.6" material="color:#ffffff; shader:flat"></a-plane>
+  <a-plane position="3 4.95 3" rotation="90 0 0" width="2" height="0.6" material="color:#ffffff; shader:flat"></a-plane>
+
+  <!-- ===================== CONTAINMENT POD — redesigned: glass capsule in a ribbed frame,
+       cracked panel, base status lights, hazard floor ring, side diagnostics panel ===================== -->
+  <a-plane rotation="-90 0 0" position="0 0.006 -5.6" radius="1.3" geometry="primitive: circle; radius: 1.3" material="color:#c9820a; opacity:0.5; transparent:true; shader:flat"></a-plane>
+  <a-entity position="0 1.1 -6.3">
+    <!-- glass capsule -->
+    <a-cylinder radius="0.85" height="2.4" material="color:#bcd8d4; opacity:0.35; transparent:true; shader:flat"></a-cylinder>
+    <!-- inner core / murky containment fluid -->
+    <a-cylinder radius="0.6" height="2" material="color:#2a4a42; opacity:0.6; transparent:true; shader:flat"></a-cylinder>
+    <!-- metal ribs around the frame -->
+    <a-box position="0.85 0 0" width="0.08" height="2.4" depth="0.08" material="color:#5a6a6c; shader:flat"></a-box>
+    <a-box position="-0.85 0 0" width="0.08" height="2.4" depth="0.08" material="color:#5a6a6c; shader:flat"></a-box>
+    <a-box position="0 0 0.85" width="0.08" height="2.4" depth="0.08" material="color:#5a6a6c; shader:flat"></a-box>
+    <a-box position="0 0 -0.85" width="0.08" height="2.4" depth="0.08" material="color:#5a6a6c; shader:flat"></a-box>
+    <a-cylinder position="0 1.15 0" radius="0.9" height="0.1" material="color:#3a4749; shader:flat"></a-cylinder>
+    <a-cylinder position="0 -1.15 0" radius="0.95" height="0.15" material="color:#2b3436; shader:flat"></a-cylinder>
+    <!-- cracked panel -->
+    <a-box position="0.2 0.3 0.85" width="0.05" height="1.4" depth="0.05" rotation="0 0 12" material="color:#12181a; shader:flat"></a-box>
+    <a-box position="0.05 -0.1 0.85" width="0.04" height="0.6" depth="0.04" rotation="0 0 -20" material="color:#12181a; shader:flat"></a-box>
+    <a-box position="0.35 0.6 0.85" width="0.04" height="0.5" depth="0.04" rotation="0 0 35" material="color:#12181a; shader:flat"></a-box>
+    <!-- hazard blob + puddle -->
+    <a-sphere id="hazardBlob" position="0 -0.9 0.85" radius="0.22" material="color:#39ff88; shader:flat; opacity:0.9; transparent:true"
+      animation="property: scale; dir: alternate; dur: 1400; loop: true; to: 1.15 1.15 1.15; easing: easeInOutSine"></a-sphere>
+    <a-plane id="hazardPuddle" rotation="-90 0 0" position="0 -1.09 1.1" width="0.5" height="0.35" material="color:#39ff88; shader:flat; opacity:0.55; transparent:true"></a-plane>
+    <!-- status lights on the base -->
+    <a-sphere position="-0.5 -1.14 0.6" radius="0.04" material="color:#e0293c; shader:flat"
+      animation="property: material.opacity; dir: alternate; dur: 900; loop: true; to: 0.3; easing: easeInOutSine"></a-sphere>
+    <a-sphere position="-0.3 -1.14 0.75" radius="0.04" material="color:#c9820a; shader:flat"></a-sphere>
+    <a-text value="CONTAINMENT POD // BREACHED" position="0 1.6 0.85" align="center" width="3" color="#c9303f"></a-text>
+  </a-entity>
+  <!-- diagnostics panel beside the pod -->
+  <a-entity position="1.5 1.2 -6.6" rotation="0 25 0">
+    <a-box width="0.6" height="0.8" depth="0.1" material="color:#2b3436; shader:flat"></a-box>
+    <a-plane position="0 0.15 0.06" width="0.4" height="0.3" material="color:#0f3d2a; shader:flat"></a-plane>
+    <a-text value="POD\nDIAGNOSTICS" position="0 0.15 0.07" align="center" width="1.2" color="#3ddc8a"></a-text>
+    <a-circle position="-0.15 -0.25 0.06" radius="0.03" material="color:#1f9d5c; shader:flat"></a-circle>
+    <a-circle position="0 -0.25 0.06" radius="0.03" material="color:#c9820a; shader:flat"></a-circle>
+    <a-circle position="0.15 -0.25 0.06" radius="0.03" material="color:#e0293c; shader:flat"></a-circle>
+  </a-entity>
+
+  <a-text id="goalText" value="RESTORE POWER." position="0 2.4 -3" align="center" width="5" color="#12181a" opacity="0"></a-text>
+
+  <a-entity id="powerPanel" position="-5.5 1.4 -2">
+    <a-plane width="1.8" height="1.4" rotation="0 40 0" material="color:#e8edf0; shader:flat"></a-plane>
+    <a-text value="POWER RELAY" position="0 0.85 0" rotation="0 40 0" align="center" width="2" color="#3a4749"></a-text>
+
+    <a-box class="clickable switch" id="switch1" data-color="gold" position="-0.4 0 0.3" rotation="0 40 0" width="0.3" height="0.55" depth="0.15" material="color:#e0293c; shader:flat"></a-box>
+    <a-sphere position="-0.4 0.32 0.36" radius="0.05" rotation="0 40 0" material="color:#c9820a; shader:flat"></a-sphere>
+
+    <a-box class="clickable switch" id="switch2" data-color="red" position="0 0 0.3" rotation="0 40 0" width="0.3" height="0.55" depth="0.15" material="color:#e0293c; shader:flat"></a-box>
+    <a-sphere position="0 0.32 0.36" radius="0.05" rotation="0 40 0" material="color:#c9303f; shader:flat"></a-sphere>
+
+    <a-box class="clickable switch" id="switch3" data-color="blue" position="0.4 0 0.3" rotation="0 40 0" width="0.3" height="0.55" depth="0.15" material="color:#e0293c; shader:flat"></a-box>
+    <a-sphere position="0.4 0.32 0.36" radius="0.05" rotation="0 40 0" material="color:#1a73c4; shader:flat"></a-sphere>
+
+    <a-box class="clickable switch-decoy" id="switchFaulty" position="0.85 0 0.3" rotation="0 40 0" width="0.3" height="0.55" depth="0.15" material="color:#9aa4a6; shader:flat"></a-box>
+    <a-text value="A     B     C     X" position="0 -0.5 0.3" rotation="0 40 0" align="center" width="2.2" color="#3a4749"></a-text>
+  </a-entity>
+
+  <a-entity id="dnaArea" position="-1.2 1.1 -5.6" visible="false">
+    <a-box width="1.6" height="1" depth="0.8" material="color:#8a9a9c; shader:flat"></a-box>
+    <a-text value="GENE SEQUENCER" position="0 0.85 0" align="center" width="2.4" color="#3a4749"></a-text>
+    <a-box class="clickable dna-slot" id="slotA" data-slot="A" data-correct="fragB" position="-0.5 0.55 0.15" width="0.35" height="0.15" depth="0.35" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="NEEDS: He" position="-0.5 0.35 0.4" align="center" width="1.2" color="#3a4749"></a-text>
+    <a-box class="clickable dna-slot" id="slotB" data-slot="B" data-correct="fragC" position="0 0.55 0.15" width="0.35" height="0.15" depth="0.35" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="NEEDS: F" position="0 0.35 0.4" align="center" width="1.2" color="#3a4749"></a-text>
+    <a-box class="clickable dna-slot" id="slotC" data-slot="C" data-correct="fragA" position="0.5 0.55 0.15" width="0.35" height="0.15" depth="0.35" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="NEEDS: Li" position="0.5 0.35 0.4" align="center" width="1.2" color="#3a4749"></a-text>
+  </a-entity>
+
+  <!-- Sample: on a proper wheeled lab cart, not floating on open floor -->
+  <a-entity position="-2 0 -3">
+    <a-box position="0 0.35 0" width="0.6" height="0.05" depth="0.4" material="color:#9aa4a6; shader:flat"></a-box>
+    <a-box position="0 0.15 0" width="0.5" height="0.35" depth="0.3" material="color:#8a9a9c; shader:flat"></a-box>
+    <a-cylinder position="-0.22 0.06 0.12" radius="0.06" height="0.03" rotation="90 0 0" material="color:#3a4749; shader:flat"></a-cylinder>
+    <a-cylinder position="0.22 0.06 0.12" radius="0.06" height="0.03" rotation="90 0 0" material="color:#3a4749; shader:flat"></a-cylinder>
+    <a-cylinder position="-0.22 0.06 -0.12" radius="0.06" height="0.03" rotation="90 0 0" material="color:#3a4749; shader:flat"></a-cylinder>
+    <a-cylinder position="0.22 0.06 -0.12" radius="0.06" height="0.03" rotation="90 0 0" material="color:#3a4749; shader:flat"></a-cylinder>
+    <a-cylinder position="0 0.4 0" radius="0.15" height="0.15" material="color:#c7d0d2; shader:flat"></a-cylinder>
+    <a-sphere class="clickable" id="sample" position="0 0.62" radius="0.16" material="color:#1f9d5c; shader:flat"
+      animation="property: position; dir: alternate; dur: 1600; loop: true; to: 0 0.68 0; easing: easeInOutSine"></a-sphere>
+    <a-text value="UNSTABLE SAMPLE\nCLICK TO RETRIEVE FOR SEQUENCING" position="0 1.0 0" align="center" width="2.2" color="#3a4749"></a-text>
+  </a-entity>
+
+  <a-entity id="fragments" visible="false">
+    <a-sphere class="clickable dna-fragment" id="fragA" data-frag="fragA" position="-1.8 1.05 -4.9" radius="0.15" material="color:#c9303f; shader:flat"></a-sphere>
+    <a-sphere class="clickable dna-fragment" id="fragB" data-frag="fragB" position="-1.2 1.05 -4.9" radius="0.15" material="color:#1a73c4; shader:flat"></a-sphere>
+    <a-sphere class="clickable dna-fragment" id="fragC" data-frag="fragC" position="-0.6 1.05 -4.9" radius="0.15" material="color:#c9820a; shader:flat"></a-sphere>
+  </a-entity>
+
+  <a-entity id="vent" position="6.8 2 0" rotation="0 0 0">
+    <a-box width="0.08" height="1.3" depth="1.3" material="color:#3a4749; shader:flat"></a-box>
+    <a-box position="0.045 0 0" width="0.02" height="1.2" depth="1.2" material="color:#12181a; shader:flat"></a-box>
+  </a-entity>
+  <a-box id="shadowFigure" position="6 1.4 0" width="0.6" height="1.8" depth="0.2" material="color:#000000; shader:flat" visible="false"></a-box>
+
+  <a-entity id="chemArea" position="4.5 1.2 -5.2" visible="false">
+    <a-text value="DAMAGED READOUT: STABILIZER MATCHES CHART COLOR [PINK]" position="0 1 0" align="center" width="3" color="#c9303f"></a-text>
+    <a-cylinder class="clickable bottle" id="bottleA" data-bottle="A" position="-0.6 0.4 0" radius="0.14" height="0.42" material="color:#e8edf0; shader:flat"></a-cylinder>
+    <a-text value="Cl" position="-0.6 0.65 0" align="center" width="1" color="#3a4749"></a-text>
+    <a-cylinder class="clickable bottle" id="bottleB" data-bottle="B" position="0 0.4 0" radius="0.14" height="0.42" material="color:#e8edf0; shader:flat" data-correct="true"></a-cylinder>
+    <a-text value="Na" position="0 0.65 0" align="center" width="1" color="#3a4749"></a-text>
+    <a-cylinder class="clickable bottle" id="bottleC" data-bottle="C" position="0.6 0.4 0" radius="0.14" height="0.42" material="color:#e8edf0; shader:flat"></a-cylinder>
+    <a-text value="Ar" position="0.6 0.65 0" align="center" width="1" color="#3a4749"></a-text>
+    <a-box id="mixer" position="0 0 0.8" width="0.5" height="0.4" depth="0.5" material="color:#8a9a9c; shader:flat"></a-box>
+  </a-entity>
+
+  <a-entity id="ventArea" position="6.5 1.3 -2" visible="false">
+    <a-text value="AIRFLOW PURGE — SEQUENCE NOT LABELED" position="0 0.75 0" rotation="0 -90 0" align="center" width="2.2" color="#3a4749"></a-text>
+    <a-box class="clickable vent-btn" id="ventBtnAr" data-btn="Ar" position="0 0.3 -0.3" rotation="0 -90 0" width="0.26" height="0.26" depth="0.12" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="Ar" position="-0.16 0.3 -0.3" rotation="0 -90 0" align="center" width="1" color="#3a4749"></a-text>
+    <a-box class="clickable vent-btn" id="ventBtnHe" data-btn="He" position="0 0.3 0" rotation="0 -90 0" width="0.26" height="0.26" depth="0.12" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="He" position="-0.16 0.3 0" rotation="0 -90 0" align="center" width="1" color="#3a4749"></a-text>
+    <a-box class="clickable vent-btn" id="ventBtnNe" data-btn="Ne" position="0 0.3 0.3" rotation="0 -90 0" width="0.26" height="0.26" depth="0.12" material="color:#c7d0d2; shader:flat"></a-box>
+    <a-text value="Ne" position="-0.16 0.3 0.3" rotation="0 -90 0" align="center" width="1" color="#3a4749"></a-text>
+  </a-entity>
+  <a-plane id="fogLeak" rotation="-90 0 0" position="0 0.05 0" width="14" height="14" material="color:#ffffff; shader:flat; opacity:0; transparent:true"></a-plane>
+
+  <a-entity position="6.3 0.9 5.5">
+    <a-box class="clickable" id="vialSubject07" width="0.4" height="0.5" depth="0.4" material="opacity:0; transparent:true"></a-box>
+    <a-cylinder id="vialVisual" radius="0.1" height="0.32" material="color:#c9820a; shader:flat"></a-cylinder>
+  </a-entity>
+  <a-text value="SUBJECT 07" position="6.3 1.25 5.5" align="center" width="1.4" color="#3a4749"></a-text>
+
+  <a-entity id="finalArea" position="0 1.3 6.8" rotation="0 180 0" visible="false">
+    <a-text value="CONTAINMENT OVERRIDE" position="0 1.5 0" align="center" width="3" color="#3a4749"></a-text>
+
+    <a-box class="clickable final-step" id="stepScan" data-step="scan" position="-1.9 0.4 0" width="0.55" height="0.65" depth="0.12" material="color:#1a73c4; shader:flat"></a-box>
+    <a-text value="HAND SCAN" position="-1.9 -0.2 0" align="center" width="1.4" color="#3a4749"></a-text>
+
+    <a-box class="clickable final-step" id="stepStabiliser" data-step="stabiliser" position="-0.65 0.4 0" width="0.55" height="0.65" depth="0.12" material="color:#1f9d5c; shader:flat"></a-box>
+    <a-text value="STABILISER" position="-0.65 -0.2 0" align="center" width="1.4" color="#3a4749"></a-text>
+
+    <a-box class="clickable final-step" id="stepLasers" data-step="lasers" position="0.65 0.4 0" width="0.55" height="0.65" depth="0.12" material="color:#c9303f; shader:flat"></a-box>
+    <a-text value="ALIGN LASERS" position="0.65 -0.2 0" align="center" width="1.6" color="#3a4749"></a-text>
+
+    <a-entity position="1.9 0.4 0">
+      <a-box width="0.55" height="0.65" depth="0.12" material="color:#2b3436; shader:flat"></a-box>
+      <a-plane class="clickable" id="stepCode" data-step="code" position="0 0 0.07" width="0.42" height="0.5" material="color:#0f3d2a; shader:flat"></a-plane>
+      <a-text value="TERMINAL" position="0 0 0.08" align="center" width="1.1" color="#3ddc8a"></a-text>
+    </a-entity>
+    <a-text value="ENTER CODE" position="1.9 -0.2 0" align="center" width="1.4" color="#3a4749"></a-text>
+
+    <a-plane id="blastDoor" position="0 0 -0.2" width="4" height="3" material="color:#dfe6e8; shader:flat"></a-plane>
+  </a-entity>
+
+  <a-entity id="labDressing"></a-entity>
+
+</a-scene>
+
+<script>
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (!window.AFRAME) document.getElementById('loadError').classList.add('show');
+  }, 2500);
+});
+</script>
+
+<script>
+function initGame() {
+
+const $ = (sel) => document.querySelector(sel);
+
+function el(tag, attrs) {
+  const e = document.createElement(tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function openModal(id) {
+  if (document.exitPointerLock) document.exitPointerLock();
+  $('#crosshair').classList.add('hidden');
+  $(id).classList.add('active');
+}
+function closeModal(id) {
+  $(id).classList.remove('active');
+  $('#crosshair').classList.remove('hidden');
+}
+
+const DIGIT_PATTERNS = {
+  '0': ['111','101','101','101','111'], '1': ['010','110','010','010','111'],
+  '2': ['111','001','111','100','111'], '3': ['111','001','111','001','111'],
+  '4': ['101','101','111','001','001'], '5': ['111','100','111','001','111'],
+  '6': ['111','100','111','101','111'], '7': ['111','001','010','010','010'],
+  '8': ['111','101','111','101','111'], '9': ['111','101','111','001','111']
+};
+function renderScopeDigit(digit) {
+  const wrap = document.createElement('div');
+  wrap.className = 'scopeDigit';
+  DIGIT_PATTERNS[digit].forEach((row) => {
+    row.split('').forEach((bit) => {
+      const dot = document.createElement('div');
+      dot.className = 'scopeDot' + (bit === '1' ? ' on' : '');
+      wrap.appendChild(dot);
+    });
+  });
+  return wrap;
+}
+function openScope(digits) {
+  const circle = $('#scopeCircle');
+  circle.querySelectorAll('.scopeNoise').forEach((n) => n.remove());
+  const grids = $('#scopeGrids');
+  grids.innerHTML = '';
+  digits.split('').forEach((d) => grids.appendChild(renderScopeDigit(d)));
+  for (let i = 0; i < 55; i++) {
+    const n = document.createElement('div');
+    n.className = 'scopeNoise';
+    const size = 4 + Math.random() * 6;
+    n.style.width = size + 'px';
+    n.style.height = size + 'px';
+    n.style.left = Math.random() * 100 + '%';
+    n.style.top = Math.random() * 100 + '%';
+    circle.appendChild(n);
+  }
+  openModal('#scopeModal');
+}
+$('#scopeClose').addEventListener('click', () => closeModal('#scopeModal'));
+
+function makeClipboard(root, opts) {
+  const holder = el('a-entity', { position: `${opts.x} ${opts.y} ${opts.z}`, rotation: `0 ${opts.ry || 0} 0` });
+  const backing = el('a-plane', { position: '0 0 -0.01', width: '0.5', height: '0.6', material: 'color:#b89968; shader:flat' });
+  const board = el('a-plane', { class: 'clickable datapad', width: '0.4', height: '0.5', material: 'color:#e9e0c8; shader:flat', 'data-title': opts.title, 'data-body': opts.body });
+  const clip = el('a-box', { position: '0 0.23 0.01', width: '0.14', height: '0.05', depth: '0.02', material: 'color:#5a6a6c; shader:flat' });
+  const dot = el('a-circle', { position: '0.15 0.18 0.01', radius: '0.03', material: 'color:#e0293c; shader:flat' });
+  const label = el('a-text', { value: 'READ', position: '0 -0.2 0.01', align: 'center', width: '1.2', color: '#5a6a6c' });
+  holder.appendChild(backing); holder.appendChild(board); holder.appendChild(clip); holder.appendChild(dot); holder.appendChild(label);
+  root.appendChild(holder);
+}
+
+function makeFlavor(el3d, msg) {
+  el3d.classList.add('clickable', 'flavor');
+  el3d.setAttribute('data-msg', msg);
+  return el3d;
+}
+
+function buildLabDressing() {
+  const root = $('#labDressing');
+
+  for (let i = -6; i <= 6; i++) {
+    root.appendChild(el('a-plane', { rotation: '-90 0 0', position: `${i} 0.003 0`, width: '0.02', height: '14', material: 'color:#9aa4a6; opacity:0.5; transparent:true; shader:flat' }));
+    root.appendChild(el('a-plane', { rotation: '-90 0 0', position: `0 0.003 ${i}`, width: '14', height: '0.02', material: 'color:#9aa4a6; opacity:0.5; transparent:true; shader:flat' }));
   }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg-darker);
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-    font-family: 'Courier New', monospace;
-    user-select: none;
-    -webkit-user-select: none;
+  root.appendChild(el('a-box', { position: '-6.8 0.9 0.5', width: '0.25', height: '0.05', depth: '3.2', material: 'color:#9aa4a6; shader:flat' }));
+  const tubeColors = ['#1a73c4', '#c9820a', '#c9303f', '#9a5ee0', '#3ddc8a', '#e07850', '#1f9d5c', '#c9820a'];
+  tubeColors.forEach((color, i) => {
+    const z = -0.9 + i * 0.4;
+    root.appendChild(el('a-cylinder', { position: `-6.75 1.07 ${z}`, radius: '0.045', height: '0.32', material: 'color:#e8edf0; opacity:0.5; transparent:true; shader:flat' }));
+    root.appendChild(el('a-cylinder', { position: `-6.75 0.95 ${z}`, radius: '0.04', height: '0.12', material: `color:${color}; shader:flat` }));
+  });
+  root.appendChild(el('a-text', { value: 'SAMPLE STORAGE', position: '-6.9 1.5 0.5', rotation: '0 90 0', align: 'center', width: '2', color: '#3a4749' }));
+  root.appendChild(el('a-box', { position: '-6.8 0.4 0.5', width: '0.3', height: '0.35', depth: '3.2', material: 'color:#c7d0d2; shader:flat' }));
+
+  const cabinet = el('a-box', { position: '-6.6 0.5 -1', width: '0.5', height: '1', depth: '0.4', material: 'color:#8a9a9c; shader:flat' });
+  root.appendChild(makeFlavor(cabinet, 'Filing cabinet. Locked. The label just says "07 — DO NOT LOG."'));
+  root.appendChild(el('a-box', { position: '-6.35 0.75 -0.79', width: '0.4', height: '0.02', depth: '0.02', material: 'color:#3a4749; shader:flat' }));
+  root.appendChild(el('a-box', { position: '-6.35 0.35 -0.79', width: '0.4', height: '0.02', depth: '0.02', material: 'color:#3a4749; shader:flat' }));
+
+  // --- Incident board: index cards (quick reference) + the board itself is clickable for a fuller hint ---
+  const boardBacking = el('a-plane', { position: '-6.94 2.0 3.0', rotation: '0 90 0', width: '1.7', height: '1.3', material: 'color:#c9a876; shader:flat' });
+  root.appendChild(makeFlavor(boardBacking, '__HINT_BOARD__'));
+  boardBacking.classList.remove('flavor');
+  boardBacking.classList.add('hint-board');
+  root.appendChild(el('a-text', { value: 'INCIDENT BOARD (click for hints)', position: '-6.93 2.72 3.0', rotation: '0 90 0', align: 'center', width: '1.8', color: '#3a4749' }));
+  const boardCards = [
+    ['POWER RELAY', 'Answer is on the sample shelf.'],
+    ['GENE SEQUENCER', 'Check the periodic table\'s colors.'],
+    ['CHEMICAL MIXER', 'Readout + periodic table legend.'],
+    ['VENTILATION', 'Maintenance note by the vents.'],
+    ['HAND SCANNER', 'Security memo near the override door.'],
+    ['STABILISER', 'Maintenance note near the chem bench.'],
+    ['LASER ALIGN', 'Optics note near the override door.']
+  ];
+  const cardCols = 2, cardW = 0.75, cardH = 0.32, cardGapY = 0.05;
+  boardCards.forEach(([title, body], i) => {
+    const col = i % cardCols, row = Math.floor(i / cardCols);
+    const dz = -0.55 + col * (cardW + 0.06);
+    const dy = 0.35 - row * (cardH + cardGapY);
+    root.appendChild(el('a-plane', { position: `-6.93 ${2.0 + dy} ${3.0 + dz}`, rotation: '0 90 0', width: cardW, height: cardH, material: 'color:#fbf6e6; shader:flat' }));
+    root.appendChild(el('a-text', { value: title, position: `-6.92 ${2.0 + dy + 0.09} ${3.0 + dz}`, rotation: '0 90 0', align: 'center', width: '1.7', color: '#c9303f' }));
+    root.appendChild(el('a-text', { value: body, position: `-6.92 ${2.0 + dy - 0.04} ${3.0 + dz}`, rotation: '0 90 0', align: 'center', width: '1.4', color: '#3a4749' }));
+  });
+
+  const crate1 = el('a-box', { position: '-6.3 0.3 -6.3', width: '0.6', height: '0.6', depth: '0.6', material: 'color:#c98a4a; shader:flat' });
+  root.appendChild(makeFlavor(crate1, 'Sealed supply crate. Smells faintly of antiseptic.'));
+  root.appendChild(el('a-box', { position: '-6.3 0.61 -6.3', width: '0.62', height: '0.03', depth: '0.62', material: 'color:#8a5a2a; shader:flat' }));
+  const crate2 = el('a-box', { position: '-5.5 0.3 -6.3', width: '0.6', height: '0.6', depth: '0.6', material: 'color:#c98a4a; shader:flat' });
+  root.appendChild(makeFlavor(crate2, 'Another crate. Empty when you shake it.'));
+  root.appendChild(el('a-box', { position: '-5.5 0.61 -6.3', width: '0.62', height: '0.03', depth: '0.62', material: 'color:#8a5a2a; shader:flat' }));
+
+  const stationBody = el('a-box', { position: '5.5 0.9 6.5', width: '0.5', height: '0.6', depth: '0.2', material: 'color:#e8edf0; shader:flat' });
+  root.appendChild(makeFlavor(stationBody, 'Emergency safety station. The eyewash still works.'));
+  root.appendChild(el('a-plane', { position: '5.5 0.9 6.39', rotation: '0 180 0', width: '0.3', height: '0.06', material: 'color:#e0293c; shader:flat' }));
+  root.appendChild(el('a-plane', { position: '5.5 0.9 6.39', rotation: '0 180 0', width: '0.06', height: '0.3', material: 'color:#e0293c; shader:flat' }));
+  root.appendChild(el('a-cylinder', { position: '5.5 0.45 6.5', radius: '0.15', height: '0.5', material: 'color:#c7d0d2; shader:flat' }));
+  root.appendChild(el('a-cylinder', { position: '5.5 0.72 6.5', radius: '0.16', height: '0.05', material: 'color:#9aa4a6; shader:flat' }));
+  root.appendChild(el('a-text', { value: 'SAFETY STATION', position: '5.5 1.3 6.5', align: 'center', width: '1.8', color: '#3a4749' }));
+
+  makeClipboard(root, {
+    x: -4, y: 1.9, z: 6.9, ry: 180,
+    title: 'SECURITY MEMO',
+    body: "Emergency override hand-scan pattern (in case the badge reader fails):\n\n7 - 5 - 3 - 1 - 9\n\n(numbered as on the panel, left to right, top to bottom)"
+  });
+  makeClipboard(root, {
+    x: 4, y: 1.9, z: 6.9, ry: 180,
+    title: 'OPTICS NOTE',
+    body: "Realigned the containment lasers after the last power cycle.\n\nCorrect mirror facing, left to right: RIGHT, LEFT, DOWN."
+  });
+
+  root.appendChild(el('a-box', { position: '6.7 0.5 1.5', width: '0.5', height: '1', depth: '2', material: 'color:#8a9a9c; shader:flat' }));
+  [0.8, 1.2].forEach((z, i) => {
+    root.appendChild(el('a-cylinder', { position: `6.7 1.08 ${z}`, radius: '0.09', height: '0.16', 'open-ended': 'true', material: 'color:#e8edf0; opacity:0.6; transparent:true; shader:flat' }));
+    root.appendChild(el('a-cylinder', { position: `6.7 1.03 ${z}`, radius: '0.08', height: '0.06', material: `color:${['#1f9d5c', '#3ddc8a'][i]}; shader:flat` }));
+  });
+
+  const scope = el('a-entity', { position: '6.7 1.02 2.15' });
+  scope.appendChild(el('a-cylinder', { position: '0 0 0', radius: '0.1', height: '0.04', material: 'color:#3a4749; shader:flat' }));
+  scope.appendChild(el('a-cylinder', { position: '0 0.15 0', radius: '0.025', height: '0.3', material: 'color:#5a6a6c; shader:flat' }));
+  scope.appendChild(el('a-box', { class: 'clickable', id: 'microscope', position: '0 0.32 0.06', rotation: '55 0 0', width: '0.08', height: '0.22', depth: '0.08', material: 'color:#2b3436; shader:flat' }));
+  scope.appendChild(el('a-text', { value: 'MICROSCOPE', position: '0 0.55 0', align: 'center', width: '1.6', color: '#3a4749' }));
+  root.appendChild(scope);
+
+  root.appendChild(el('a-box', { position: '6.3 0.45 5.5', width: '0.5', height: '0.9', depth: '0.5', material: 'color:#8a9a9c; shader:flat' }));
+
+  makeClipboard(root, {
+    x: -6.95, y: 1.8, z: -2, ry: 90,
+    title: 'PERSONAL LOG — DR. A. VOSS',
+    body: "Day 41.\nThe board keeps asking about containment redundancy. I told them the backup relay is fine.\n\nIt is not fine. I keyed the relay switches to hidden color tags, same as the sample vials.\n\n(Scrawled in the margin: OVERRIDE CODE — DIGITS 1-2: 4 1)"
+  });
+  makeClipboard(root, {
+    x: -1.2, y: 1.9, z: -6.94, ry: 0,
+    title: 'MAINTENANCE NOTE',
+    body: "Sequencer recalibrated after the Q3 retrofit.\n\nStrand color now maps to periodic CATEGORY, not raw element name. Check the wall chart's shading before loading fragments."
+  });
+  makeClipboard(root, {
+    x: -4.3, y: 1.9, z: -6.94, ry: 0,
+    title: 'ETHICS BOARD MEMO (UNSENT)',
+    body: "Dr. Voss,\n\nYour request to proceed with Subject 07's splicing trial was denied twice. We have reason to believe you proceeded anyway.\n\nThis memo was never sent. We don't know why."
+  });
+  makeClipboard(root, {
+    x: 6.95, y: 2.2, z: -2.6, ry: -90,
+    title: 'MAINTENANCE NOTE',
+    body: "Purge cycle rewired during the noble-gas cooling retrofit.\n\nOrder follows the chart: lightest element first, then next, then heaviest."
+  });
+  makeClipboard(root, {
+    x: 6.95, y: 2.0, z: 1.6, ry: -90,
+    title: 'TECHNICIAN LOG',
+    body: "If you're reading this, comms are still down and you're on your own.\n\nVoss left something growing on a slide under the microscope on this bench. Look closely — it's not just noise."
+  });
+  makeClipboard(root, {
+    x: 4.5, y: 1.9, z: -6.94, ry: 0,
+    title: 'MAINTENANCE NOTE — STABILISER',
+    body: "Reminder: the containment stabiliser must be pressurized to level 6 before override will accept it. Under-pressurizing trips the alarm."
+  });
+
+  const elements = [
+    ['H', 1, 1, 'n'], ['He', 1, 18, 'noble'],
+    ['Li', 2, 1, 'alkali'], ['Be', 2, 2, 'n'], ['B', 2, 13, 'n'], ['C', 2, 14, 'n'], ['N', 2, 15, 'n'], ['O', 2, 16, 'n'], ['F', 2, 17, 'halogen'], ['Ne', 2, 18, 'noble'],
+    ['Na', 3, 1, 'alkali'], ['Mg', 3, 2, 'n'], ['Al', 3, 13, 'n'], ['Si', 3, 14, 'n'], ['P', 3, 15, 'n'], ['S', 3, 16, 'n'], ['Cl', 3, 17, 'halogen'], ['Ar', 3, 18, 'noble']
+  ];
+  const catColor = { n: '#c7d0d2', alkali: '#f0b0b8', halogen: '#f5dd9e', noble: '#aed0f0' };
+  const cellSize = 0.24, originX = -5.6, originY = 3.9;
+  root.appendChild(el('a-plane', { position: `${originX + 1.4} ${originY - 0.3} -6.96`, width: '4.4', height: '2.4', material: 'color:#e8edf0; shader:flat' }));
+  root.appendChild(el('a-text', { value: 'PERIODIC TABLE OF THE ELEMENTS (1-18)', position: `${originX + 1.4} ${originY + 0.5} -6.94`, align: 'center', width: '3.6', color: '#3a4749' }));
+  elements.forEach(([sym, row, col, cat]) => {
+    const x = originX + (col - 1) * cellSize;
+    const y = originY - (row - 1) * cellSize;
+    root.appendChild(el('a-plane', { position: `${x} ${y} -6.95`, width: cellSize * 0.88, height: cellSize * 0.88, material: `color:${catColor[cat]}; shader:flat` }));
+    root.appendChild(el('a-text', { value: sym, position: `${x} ${y} -6.93`, align: 'center', width: '1.5', color: '#2b3436' }));
+  });
+  const legendY = originY - 3 * cellSize - 0.25;
+  [['#f0b0b8', 'ALKALI METAL  ->  restores RED strands'], ['#f5dd9e', 'HALOGEN  ->  restores YELLOW strands'], ['#aed0f0', 'NOBLE GAS  ->  restores BLUE strands']].forEach(([color, text], i) => {
+    const y = legendY - i * 0.28;
+    root.appendChild(el('a-plane', { position: `${originX + 0.1} ${y} -6.94`, width: '0.2', height: '0.2', material: `color:${color}; shader:flat` }));
+    root.appendChild(el('a-text', { value: text, position: `${originX + 1.7} ${y} -6.94`, align: 'left', width: '3.4', color: '#3a4749' }));
+  });
+
+  root.appendChild(el('a-box', { position: '-3 4.7 0', rotation: '0 0 90', width: '4.5', height: '0.15', depth: '0.15', material: 'color:#9aa4a6; shader:flat' }));
+  root.appendChild(el('a-box', { position: '3 4.7 -3', rotation: '90 0 0', width: '5', height: '0.15', depth: '0.15', material: 'color:#9aa4a6; shader:flat' }));
+  [[-3, -3], [3, -3], [-3, 3], [3, 3]].forEach(([x, z]) => {
+    root.appendChild(el('a-cylinder', { position: `${x} 4.85 ${z}`, radius: '0.02', height: '0.3', material: 'color:#5a6a6c; shader:flat' }));
+    root.appendChild(el('a-cone', { position: `${x} 4.65 ${z}`, radius: '0.28', height: '0.15', 'open-ended': 'true', material: 'color:#5a6a6c; shader:flat', 'side': 'double' }));
+  });
+  for (let i = 0; i < 5; i++) {
+    root.appendChild(el('a-box', { position: `6 4.85 ${-3.4 + i * 0.15}`, width: '0.8', height: '0.02', depth: '0.02', material: 'color:#3a4749; shader:flat' }));
   }
 
-  a-scene {
-    width: 100vw;
-    height: 100vh;
-    display: block;
-  }
+  root.appendChild(el('a-plane', { rotation: '-90 0 0', position: '-1.2 0.006 -3', width: '2.4', height: '1.6', material: 'color:#8ba9a6; opacity:0.7; transparent:true; shader:flat' }));
+  root.appendChild(el('a-plane', { rotation: '-90 0 0', position: '5.5 0.006 3', width: '1.8', height: '1.8', material: 'color:#8ba9a6; opacity:0.7; transparent:true; shader:flat' }));
 
-  /* HEADS UP DISPLAY SYSTEMS PLATFORM */
-  #hud-wrapper {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    color: var(--text-primary);
-    z-index: 5;
-    box-sizing: border-box;
-  }
+  const bioSign = el('a-plane', { position: '4.2 3.1 -6.9', width: '0.9', height: '0.9', material: 'color:#f5e28a; shader:flat' });
+  root.appendChild(makeFlavor(bioSign, 'Standard biohazard placard. This one has a hand-written "!!" under it.'));
+  root.appendChild(el('a-text', { value: 'BIOHAZARD\nAREA', position: '4.2 3.1 -6.88', align: 'center', width: '1.5', color: '#2b2b2b' }));
+  root.appendChild(el('a-circle', { position: '4.2 3.25 -6.87', radius: '0.14', material: 'color:#2b2b2b; shader:flat' }));
+  const clockFace = el('a-circle', { position: '2.8 3.1 -6.95', radius: '0.28', material: 'color:#3a4749; shader:flat' });
+  root.appendChild(makeFlavor(clockFace, 'Stopped at 03:14 — the moment the pod cracked.'));
+  root.appendChild(el('a-circle', { position: '2.8 3.1 -6.94', radius: '0.25', material: 'color:#f5f7f8; shader:flat' }));
+  root.appendChild(el('a-circle', { position: '2.8 3.1 -6.93', radius: '0.03', material: 'color:#2b3436; shader:flat' }));
+  root.appendChild(el('a-box', { position: '2.8 3.15 -6.935', width: '0.02', height: '0.15', depth: '0.01', material: 'color:#2b3436; shader:flat' }));
 
-  .hud-panel {
-    position: absolute;
-    background: rgba(15, 19, 26, 0.88);
-    border: 1px solid var(--border-glow);
-    padding: 12px 16px;
-    border-radius: 4px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-  }
+  const extinguisher = el('a-cylinder', { position: '-6.9 0.275 -3.5', radius: '0.1', height: '0.55', material: 'color:#c9303f; shader:flat' });
+  root.appendChild(makeFlavor(extinguisher, 'Fire extinguisher. Fully charged, inspection tag current.'));
+  root.appendChild(el('a-cylinder', { position: '-6.9 0.61 -3.5', radius: '0.03', height: '0.12', material: 'color:#3a4749; shader:flat' }));
+  [-4, -1, 2].forEach((z) => {
+    const valve = el('a-cylinder', { position: `0 0.15 ${z}`, radius: '0.1', height: '0.03', rotation: '90 0 0', material: 'color:#c9820a; shader:flat' });
+    root.appendChild(makeFlavor(valve, 'A shutoff valve. Already closed.'));
+  });
 
-  #hud-left {
-    top: 20px;
-    left: 20px;
-    width: 320px;
-  }
+  root.appendChild(el('a-box', { position: '0 0.04 -6.96', width: '14', height: '0.08', depth: '0.04', material: 'color:#5a6a6c; shader:flat' }));
+  root.appendChild(el('a-box', { position: '0 0.04 6.96', width: '14', height: '0.08', depth: '0.04', material: 'color:#5a6a6c; shader:flat' }));
+  root.appendChild(el('a-box', { position: '-6.96 0.04 0', width: '0.04', height: '0.08', depth: '14', material: 'color:#5a6a6c; shader:flat' }));
+  root.appendChild(el('a-box', { position: '6.96 0.04 0', width: '0.04', height: '0.08', depth: '14', material: 'color:#5a6a6c; shader:flat' }));
 
-  .hud-title-row {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--text-secondary);
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-weight: bold;
-  }
+  root.appendChild(el('a-cylinder', { position: '0 0.15 -6.85', rotation: '0 0 90', radius: '0.06', height: '13.6', material: 'color:#9aa4a6; shader:flat' }));
+  root.appendChild(el('a-cylinder', { position: '-6.85 0.15 0', rotation: '90 0 0', radius: '0.06', height: '13.6', material: 'color:#9aa4a6; shader:flat' }));
 
-  .progress-container {
-    height: 12px;
-    width: 100%;
-    background: #07090d;
-    border: 1px solid #1f293a;
-    position: relative;
-    border-radius: 2px;
-    overflow: hidden;
-  }
+  document.querySelectorAll('.flavor').forEach((f) => {
+    f.addEventListener('click', () => toast(f.getAttribute('data-msg')));
+  });
+  document.querySelectorAll('.hint-board').forEach((b) => {
+    b.classList.add('clickable');
+    b.addEventListener('click', () => openHintModal());
+  });
+}
 
-  #hud-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--color-cyan), var(--color-success));
-    transition: width 0.5s cubic-bezier(0.1, 0.8, 0.3, 1);
-    box-shadow: 0 0 8px var(--color-cyan);
-  }
+const HINTS = [
+  ['POWER RELAY', 'Each switch has a colored dot. The sample shelf has vials in a fixed left-to-right order — the switches fire in that same order.'],
+  ['GENE SEQUENCER', 'Elements belong to families (alkali metal, halogen, noble gas). The wall chart shades each family a different color — match a slot\'s element to its family\'s color.'],
+  ['CHEMICAL MIXER', 'The readout names a chart color. Find which family that color represents on the periodic table, then look for a bottle labeled with an element from that family.'],
+  ['VENTILATION', 'The purge order follows how the three elements are arranged on the periodic table — lightest first, then the next, then the heaviest.'],
+  ['HAND SCANNER', 'There\'s a numbered 1-9 grid on the scanner. A memo near the override door lists the exact order to press them in.'],
+  ['STABILISER', 'A maintenance note near the chem bench gives one exact target number to dial in.'],
+  ['LASER ALIGN', 'An optics note near the override door lists three directions, left to right, for how each mirror should end up facing.']
+];
+function openHintModal() {
+  const body = HINTS.map(([t, h]) => `<b>${t}</b>\n${h}`).join('\n\n');
+  $('#hintBody').innerHTML = body.split('\n').map((line) => line).join('<br>');
+  openModal('#hintModal');
+}
+$('#hintClose').addEventListener('click', () => closeModal('#hintModal'));
 
-  #hud-right {
-    top: 20px;
-    right: 20px;
-    width: 340px;
-    text-align: right;
-  }
+buildLabDressing();
 
-  #hud-right b {
-    color: #ffffff;
-    display: block;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-  }
+$('#microscope').addEventListener('click', () => openScope('72'));
 
-  #hud-right span {
-    font-size: 11px;
-    color: var(--text-secondary);
-    display: block;
-    line-height: 1.4;
-  }
+function wireHoverFeedback() {
+  document.querySelectorAll('.clickable').forEach((elm) => {
+    elm.addEventListener('mouseenter', () => {
+      $('#crosshair').classList.add('hot');
+      elm.setAttribute('scale', '1.15 1.15 1.15');
+    });
+    elm.addEventListener('mouseleave', () => {
+      $('#crosshair').classList.remove('hot');
+      elm.setAttribute('scale', '1 1 1');
+    });
+  });
+}
+wireHoverFeedback();
 
-  #hud-bottom-left {
-    bottom: 20px;
-    left: 20px;
-    max-width: 500px;
-    border-left: 4px solid var(--color-warning);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    opacity: 0;
-    transform: translateY(10px);
-  }
+document.querySelectorAll('.datapad').forEach((pad) => {
+  pad.addEventListener('click', () => {
+    $('#logTitle').textContent = pad.getAttribute('data-title') || 'LOG ENTRY';
+    $('#logBody').textContent = pad.getAttribute('data-body') || '';
+    openModal('#logModal');
+  });
+});
+$('#logClose').addEventListener('click', () => closeModal('#logModal'));
 
-  #hud-bottom-left.active {
-    opacity: 1;
-    transform: translateY(0);
-  }
+const state = {
+  stage: 'intro',
+  contamination: 0,
+  contaminationPaused: false,
+  gameOver: false,
+  playerMarked: false,
+  powerSequence: [],
+  powerCorrectSequence: ['blue', 'gold', 'red'],
+  sampleArmed: false,
+  selectedFragment: null,
+  dnaSlots: { A: null, B: null, C: null },
+  ventSequence: [],
+  ventCorrectSequence: ['He', 'Ne', 'Ar'],
+  finalSteps: { scan: false, stabiliser: false, lasers: false, code: false }
+};
 
-  .objective-header {
-    font-size: 12px;
-    color: var(--color-warning);
-    font-weight: bold;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+const PIN_CODE = '4172';
+let pinInput = '';
 
-  .objective-text {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-primary);
-  }
+function playSound(id) {
+  const e = document.getElementById(id);
+  if (e) { e.currentTime = 0; e.play().catch(() => {}); }
+}
 
-  #hud-timer-panel {
-    bottom: 20px;
-    right: 20px;
-    width: 180px;
-    text-align: center;
-    border: 1px solid rgba(255, 59, 48, 0.3);
-  }
+function toast(msg, ms = 2600) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
 
-  .timer-label {
-    font-size: 10px;
-    color: var(--color-danger);
-    letter-spacing: 1.5px;
-    margin-bottom: 2px;
-  }
+function setObjective(text) {
+  const box = $('#objectiveBox');
+  box.classList.remove('show');
+  setTimeout(() => { box.textContent = text; box.classList.add('show'); }, 150);
+}
 
-  #countdown-display {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--color-danger);
-    text-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
-  }
+function setStage(name, hint) {
+  $('#stageName').textContent = name;
+  $('#stageHint').textContent = hint;
+}
 
-  /* SYSTEM POINTER TARGET CROSSHAIR RETICLE */
-  #crosshair-element {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 10px;
-    height: 10px;
-    margin: -5px 0 0 -5px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.75);
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-    pointer-events: none;
-    z-index: 10;
-    transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-    display: none;
-  }
+function setGoalText(text) {
+  const e = $('#goalText');
+  e.setAttribute('value', text);
+  e.setAttribute('animation__fade', 'property: opacity; from: 0; to: 1; dur: 1200; easing: easeInOutQuad');
+}
 
-  #crosshair-element.visible {
-    display: block;
-  }
+function flashScreen(color = '#e0293c', duration = 250) {
+  const f = $('#flash');
+  f.style.background = color;
+  f.style.transition = 'none';
+  f.style.opacity = '0.45';
+  requestAnimationFrame(() => {
+    f.style.transition = `opacity ${duration}ms ease`;
+    f.style.opacity = '0';
+  });
+}
 
-  #crosshair-element.active-target {
-    background: var(--neon-terminal);
-    transform: scale(2);
-    box-shadow: 0 0 14px var(--neon-terminal);
-  }
+function updateHazardVisual() {
+  const pct = state.contamination;
+  const color = pct < 40 ? '#39ff88' : pct < 75 ? '#c9820a' : '#e0293c';
+  const scale = 1 + (pct / 100) * 0.8;
+  $('#hazardBlob').setAttribute('material', 'color', color);
+  $('#hazardPuddle').setAttribute('material', 'color', color);
+  $('#hazardPuddle').setAttribute('scale', `${scale} ${scale} ${scale}`);
+}
 
-  #mouse-lock-prompt {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--text-secondary);
-    font-size: 12px;
-    background: rgba(15, 19, 26, 0.95);
-    border: 1px solid var(--border-glow);
-    padding: 8px 18px;
-    border-radius: 3px;
-    z-index: 5;
-    pointer-events: none;
-    letter-spacing: 1px;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  }
+function setContamination(delta) {
+  if (state.gameOver) return;
+  state.contamination = Math.max(0, Math.min(100, state.contamination + delta));
+  const fill = $('#meterFill');
+  fill.style.width = state.contamination + '%';
+  $('#meterPct').textContent = Math.round(state.contamination) + '%';
+  fill.style.background =
+    state.contamination < 40 ? 'var(--safe)' :
+    state.contamination < 75 ? 'var(--warn)' : 'var(--danger)';
+  updateHazardVisual();
+  if (delta > 0) flashScreen('#e0293c', 200);
+  if (state.contamination >= 100) failEnding();
+}
 
-  /* GLOBAL OVERLAY SCREEN ARCHITECTURE */
-  .system-overlay {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    background: rgba(5, 7, 10, 0.98);
-    z-index: 100;
-    text-align: center;
-    padding: 40px;
-    color: var(--text-primary);
+setInterval(() => {
+  if (!state.contaminationPaused && !state.gameOver && state.stage !== 'intro') {
+    setContamination(1);
   }
+}, 10000);
 
-  .system-overlay.active {
-    display: flex;
+$('#enterBtn').addEventListener('click', () => {
+  $('#introOverlay').classList.remove('active');
+  $('#startHint').style.display = 'block';
+  setTimeout(() => { $('#startHint').style.display = 'none'; }, 6000);
+  playSound('sfx-voice');
+  setStage('POWER FAILURE', 'Restore the relay to bring systems back online.');
+  setGoalText('RESTORE POWER.');
+  setObjective('Three switches are color-tagged (dot above each). Find that color order on the sample shelf, then press A/B/C in that order. Avoid switch X.');
+  state.stage = 'power';
+});
+
+['switch1', 'switch2', 'switch3'].forEach((id) => {
+  $('#' + id).addEventListener('click', (e) => {
+    if (state.stage !== 'power') return;
+    const color = e.target.getAttribute('data-color');
+    state.powerSequence.push(color);
+    const idx = state.powerSequence.length - 1;
+
+    if (color !== state.powerCorrectSequence[idx]) {
+      toast('Wrong order — relay rejects sequence.');
+      playSound('sfx-error');
+      setContamination(6);
+      state.powerSequence = [];
+      ['switch1', 'switch2', 'switch3'].forEach((sid) => $('#' + sid).setAttribute('material', 'color', '#e0293c'));
+      return;
+    }
+
+    e.target.setAttribute('material', 'color', '#1f9d5c');
+    if (state.powerSequence.length === state.powerCorrectSequence.length) {
+      toast('Power restored.');
+      playSound('sfx-success');
+      startDnaPuzzle();
+    }
+  });
+});
+
+$('#switchFaulty').addEventListener('click', () => {
+  if (state.stage !== 'power') return;
+  toast('WARNING: relay fault triggered');
+  playSound('sfx-error');
+  setContamination(6);
+});
+
+function startDnaPuzzle() {
+  state.stage = 'dna';
+  setStage('SAMPLE UNSTABLE', 'Retrieve the sample, then sequence the gene fragments.');
+  setGoalText('STABILIZE THE SAMPLE.');
+  setObjective('Click the labeled sample to load it. Each slot lists an element — the periodic table\'s colors tell you which fragment matches.');
+}
+
+$('#sample').addEventListener('click', () => {
+  if (state.stage !== 'dna' || state.sampleArmed) return;
+  state.sampleArmed = true;
+  $('#sample').removeAttribute('animation');
+  $('#sample').setAttribute('animation__move', 'property: position; to: -1.2 1.05 -5.4; dur: 700; easing: easeInOutQuad');
+  $('#dnaArea').setAttribute('visible', true);
+  $('#fragments').setAttribute('visible', true);
+  toast('Sample loaded into sequencer.');
+});
+
+document.querySelectorAll('.dna-fragment').forEach((frag) => {
+  frag.addEventListener('click', () => {
+    if (state.stage !== 'dna' || !state.sampleArmed) return;
+    document.querySelectorAll('.dna-fragment').forEach((f) => f.setAttribute('scale', '1 1 1'));
+    state.selectedFragment = frag;
+    frag.setAttribute('scale', '1.4 1.4 1.4');
+    toast('Fragment selected — now click the matching slot.');
+  });
+});
+
+document.querySelectorAll('.dna-slot').forEach((slot) => {
+  slot.addEventListener('click', () => {
+    if (state.stage !== 'dna' || !state.selectedFragment) return;
+    const frag = state.selectedFragment;
+    const fragId = frag.getAttribute('data-frag');
+    const correct = slot.getAttribute('data-correct');
+
+    if (state.dnaSlots[slot.getAttribute('data-slot')] !== null) {
+      toast('Slot already filled.');
+      return;
+    }
+
+    if (fragId === correct) {
+      slot.setAttribute('material', 'color', '#1f9d5c');
+      frag.setAttribute('visible', false);
+      state.dnaSlots[slot.getAttribute('data-slot')] = fragId;
+      toast('Fragment locked in.');
+      playSound('sfx-success');
+    } else {
+      slot.setAttribute('animation__wrong', 'property: material.color; type: color; from: #e0293c; to: #c7d0d2; dur: 500');
+      setContamination(8);
+      playSound('sfx-error');
+      toast('Wrong strand — sequence rejected.');
+    }
+
+    frag.setAttribute('scale', '1 1 1');
+    state.selectedFragment = null;
+
+    if (Object.values(state.dnaSlots).every((v) => v !== null)) {
+      toast('Sequence complete.');
+      setTimeout(runJumpscare, 800);
+    }
+  });
+});
+
+function runJumpscare() {
+  state.stage = 'jumpscare';
+  state.contaminationPaused = true;
+  setStage('!! ANOMALY !!', '...');
+  setObjective('');
+
+  $('#mainLight').setAttribute('light', 'intensity', 0.1);
+  $('#ambientLight').setAttribute('light', 'intensity', 0.15);
+  playSound('sfx-bang');
+
+  $('#vent').setAttribute('animation__open', 'property: rotation; to: 0 0 70; dur: 400; easing: easeOutCubic');
+
+  const shadow = $('#shadowFigure');
+  shadow.setAttribute('visible', true);
+  shadow.setAttribute('position', '6 1.4 3');
+  shadow.setAttribute('animation__dash', 'property: position; to: -6 1.4 -2; dur: 500; easing: easeInQuad');
+  setTimeout(() => shadow.setAttribute('visible', false), 550);
+
+  let flickers = 0;
+  const flick = setInterval(() => {
+    const on = flickers % 2 === 0;
+    $('#redLight1').setAttribute('light', 'intensity', on ? 1.6 : 0.2);
+    $('#redLight2').setAttribute('light', 'intensity', on ? 1.6 : 0.2);
+    flashScreen(on ? '#12181a' : '#e0293c', 150);
+    flickers++;
+    if (flickers > 8) {
+      clearInterval(flick);
+      $('#redLight1').setAttribute('light', 'intensity', 0);
+      $('#redLight2').setAttribute('light', 'intensity', 0);
+      $('#ambientLight').setAttribute('light', 'intensity', 0.9);
+      $('#mainLight').setAttribute('light', 'intensity', 1);
+      state.contaminationPaused = false;
+      setContamination(15);
+      startChemPuzzle();
+    }
+  }, 180);
+}
+
+function startChemPuzzle() {
+  state.stage = 'chem';
+  $('#chemArea').setAttribute('visible', true);
+  setStage('MIXTURE UNSTABLE', 'Match the readout to the correct compound.');
+  setGoalText('FIND THE COMPOUND.');
+  setObjective('The readout names a chart color, not a word. Match it to a category using the periodic table\'s legend, then pick that bottle.');
+}
+
+document.querySelectorAll('.bottle').forEach((bottle) => {
+  bottle.setAttribute('data-origpos',
+    bottle.getAttribute('position').x + ' ' + bottle.getAttribute('position').y + ' ' + bottle.getAttribute('position').z);
+
+  bottle.addEventListener('click', () => {
+    if (state.stage !== 'chem') return;
+    const mixer = $('#mixer');
+    const isCorrect = bottle.getAttribute('data-correct') === 'true';
+
+    bottle.setAttribute('animation__pour', 'property: position; to: 0 0.3 0.6; dur: 400; easing: easeInQuad');
+
+    setTimeout(() => {
+      if (isCorrect) {
+        mixer.setAttribute('material', 'color', '#1f9d5c');
+        playSound('sfx-success');
+        toast('Compound stabilized.');
+        setContamination(-15);
+        setTimeout(startVentPuzzle, 700);
+      } else {
+        mixer.setAttribute('animation__flash', 'property: material.color; type: color; from: #e0293c; to: #8a9a9c; dur: 500');
+        playSound('sfx-error');
+        toast('Wrong compound — reaction unstable.');
+        setContamination(10);
+      }
+      bottle.setAttribute('animation__reset', 'property: position; to: ' + bottle.getAttribute('data-origpos') + '; dur: 1');
+    }, 420);
+  });
+});
+
+function startVentPuzzle() {
+  state.stage = 'vent';
+  $('#ventArea').setAttribute('visible', true);
+  setStage('VENT UNSEALED', 'Seal the vent before fog fills the room.');
+  setGoalText('SEAL THE VENT.');
+  setObjective('A maintenance note near the vent explains the ordering rule — the periodic table shows you which element that means first.');
+}
+
+document.querySelectorAll('.vent-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (state.stage !== 'vent') return;
+    const n = btn.getAttribute('data-btn');
+    state.ventSequence.push(n);
+    btn.setAttribute('animation__press', 'property: scale; from: 1.3 1.3 1.3; to: 1 1 1; dur: 250');
+
+    const idx = state.ventSequence.length - 1;
+    if (state.ventSequence[idx] !== state.ventCorrectSequence[idx]) {
+      playSound('sfx-error');
+      toast('Incorrect sequence — vent leaking.');
+      setContamination(8);
+      $('#fogLeak').setAttribute('animation__fog', 'property: opacity; from: 0.35; to: 0.05; dur: 1500');
+      state.ventSequence = [];
+      return;
+    }
+
+    if (state.ventSequence.length === state.ventCorrectSequence.length) {
+      playSound('sfx-success');
+      toast('Vent sealed.');
+      setContamination(-10);
+      $('#fogLeak').setAttribute('material', 'opacity', 0);
+      $('#vent').setAttribute('animation__seal', 'property: rotation; to: 0 0 0; dur: 500');
+      setTimeout(startFinalPuzzle, 700);
+    }
+  });
+});
+
+$('#vialSubject07').addEventListener('click', () => {
+  if (state.playerMarked) return;
+  state.playerMarked = true;
+  playSound('sfx-glitch');
+  toast('Subject 07 recognised...');
+  $('#vialVisual').setAttribute('animation__fade', 'property: opacity; from: 1; to: 0; dur: 900');
+  $('#vialVisual').setAttribute('material', 'transparent', true);
+});
+
+function startFinalPuzzle() {
+  state.stage = 'final';
+  $('#finalArea').setAttribute('visible', true);
+  setStage('OVERRIDE AVAILABLE', 'Reach the containment door and complete the override.');
+  setGoalText('CONTAINMENT OVERRIDE.');
+  setObjective('Four sub-systems: hand scan, stabiliser, lasers, terminal PIN. The incident board says where the answers are.');
+
+  if (state.playerMarked) {
+    setTimeout(secretEnding, 1200);
   }
+}
 
-  .system-overlay h1 {
-    font-size: 38px;
-    margin: 0 0 16px 0;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+function tryFinalStep(name, e) {
+  if (state.stage !== 'final' || state.playerMarked) return;
+  state.finalSteps[name] = true;
+  if (e) e.setAttribute('material', 'color', '#1f9d5c');
+  toast(name.toUpperCase() + ' confirmed.');
+  playSound('sfx-success');
+  if (Object.values(state.finalSteps).every(Boolean)) {
+    setTimeout(successEnding, 900);
   }
+}
 
-  .system-overlay p {
-    max-width: 680px;
-    color: var(--text-secondary);
-    font-size: 15px;
-    line-height: 1.8;
-    margin: 0 0 32px 0;
+const SCAN_TARGET = [7, 5, 3, 1, 9];
+let scanProgress = [];
+function buildScanGrid() {
+  const grid = $('#scanGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 9; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'scanCell';
+    cell.textContent = i;
+    cell.dataset.n = i;
+    cell.addEventListener('click', () => {
+      if (state.finalSteps.scan) return;
+      scanProgress.push(i);
+      const idx = scanProgress.length - 1;
+      if (SCAN_TARGET[idx] !== i) {
+        cell.classList.add('wrong');
+        playSound('sfx-error');
+        setContamination(5);
+        setTimeout(() => {
+          document.querySelectorAll('.scanCell').forEach((c) => c.classList.remove('done', 'wrong'));
+          scanProgress = [];
+        }, 400);
+        return;
+      }
+      cell.classList.add('done');
+      if (scanProgress.length === SCAN_TARGET.length) {
+        playSound('sfx-success');
+        setTimeout(() => {
+          closeModal('#scanModal');
+          tryFinalStep('scan', $('#stepScan'));
+        }, 400);
+      }
+    });
+    grid.appendChild(cell);
   }
+}
+$('#stepScan').addEventListener('click', () => {
+  if (state.stage !== 'final' || state.playerMarked || state.finalSteps.scan) return;
+  scanProgress = [];
+  buildScanGrid();
+  openModal('#scanModal');
+});
+$('#scanClose').addEventListener('click', () => closeModal('#scanModal'));
 
-  .action-trigger-btn {
-    font-family: 'Courier New', monospace;
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-glow);
-    padding: 14px 32px;
-    font-size: 14px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 4px;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+const STAB_TARGET = 6;
+let stabValue = 0;
+function updateStabDisplay(wrong) {
+  $('#stabDisplay').textContent = stabValue;
+  $('#stabDisplay').classList.toggle('wrong', !!wrong);
+}
+$('#stepStabiliser').addEventListener('click', () => {
+  if (state.stage !== 'final' || state.playerMarked || state.finalSteps.stabiliser) return;
+  stabValue = 0;
+  updateStabDisplay();
+  openModal('#stabModal');
+});
+$('#stabInc').addEventListener('click', () => { stabValue = (stabValue + 1) % 10; updateStabDisplay(); });
+$('#stabDec').addEventListener('click', () => { stabValue = (stabValue + 9) % 10; updateStabDisplay(); });
+$('#stabSet').addEventListener('click', () => {
+  if (stabValue === STAB_TARGET) {
+    playSound('sfx-success');
+    closeModal('#stabModal');
+    tryFinalStep('stabiliser', $('#stepStabiliser'));
+  } else {
+    playSound('sfx-error');
+    setContamination(5);
+    updateStabDisplay(true);
   }
+});
+$('#stabClose').addEventListener('click', () => closeModal('#stabModal'));
 
-  .action-trigger-btn:hover {
-    background: var(--neon-terminal);
-    color: var(--bg-darker);
-    border-color: var(--neon-terminal);
-    box-shadow: 0 0 16px var(--terminal-glow);
+const LASER_TARGET = [90, 270, 180];
+let laserState = [0, 0, 0];
+function buildLaserRow() {
+  const row = $('#laserRow');
+  row.innerHTML = '';
+  laserState = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'laserMirrorWrap';
+    const mirror = document.createElement('div');
+    mirror.className = 'laserMirror';
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '↑';
+    mirror.appendChild(arrow);
+    const deg = document.createElement('div');
+    deg.className = 'laserDeg';
+    deg.textContent = '0°';
+    mirror.addEventListener('click', () => {
+      laserState[i] = (laserState[i] + 90) % 360;
+      arrow.style.transform = `rotate(${laserState[i]}deg)`;
+      deg.textContent = laserState[i] + '°';
+    });
+    wrap.appendChild(mirror);
+    wrap.appendChild(deg);
+    row.appendChild(wrap);
   }
-
-  #initialization-screen h1 {
-    color: var(--color-warning);
-    text-shadow: 0 0 12px rgba(255, 204, 0, 0.4);
+}
+$('#stepLasers').addEventListener('click', () => {
+  if (state.stage !== 'final' || state.playerMarked || state.finalSteps.lasers) return;
+  buildLaserRow();
+  openModal('#laserModal');
+});
+$('#laserConfirm').addEventListener('click', () => {
+  const match = laserState.every((v, i) => v === LASER_TARGET[i]);
+  if (match) {
+    playSound('sfx-success');
+    closeModal('#laserModal');
+    tryFinalStep('lasers', $('#stepLasers'));
+  } else {
+    playSound('sfx-error');
+    setContamination(5);
+    toast('Beam misaligned.');
   }
+});
+$('#laserClose').addEventListener('click', () => closeModal('#laserModal'));
 
-  #neutralization-screen h1 {
-    color: var(--color-success);
-    text-shadow: 0 0 12px rgba(52, 199, 89, 0.4);
+$('#stepCode').addEventListener('click', () => {
+  if (state.stage !== 'final' || state.playerMarked || state.finalSteps.code) return;
+  openPinModal();
+});
+
+function openPinModal() {
+  pinInput = '';
+  updatePinDisplay();
+  openModal('#pinModal');
+}
+function closePinModal() { closeModal('#pinModal'); }
+function updatePinDisplay(wrong) {
+  const disp = $('#pinDisplay');
+  disp.textContent = pinInput.padEnd(4, '_').split('').join(' ');
+  disp.classList.toggle('wrong', !!wrong);
+}
+document.querySelectorAll('#pinGrid button[data-d]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (pinInput.length >= 4) return;
+    pinInput += btn.getAttribute('data-d');
+    updatePinDisplay();
+  });
+});
+$('#pinBackspace').addEventListener('click', () => { pinInput = pinInput.slice(0, -1); updatePinDisplay(); });
+$('#pinSubmit').addEventListener('click', () => {
+  if (pinInput === PIN_CODE) {
+    closePinModal();
+    toast('Access granted.');
+    tryFinalStep('code', $('#stepCode'));
+  } else {
+    updatePinDisplay(true);
+    playSound('sfx-error');
+    setTimeout(() => { pinInput = ''; updatePinDisplay(); }, 500);
   }
+});
+$('#pinClose').addEventListener('click', closePinModal);
 
-  #termination-screen h1 {
-    color: var(--color-danger);
-    text-shadow: 0 0 12px rgba(255, 59, 48, 0.4);
-  }
+function endGame(overlayId) {
+  state.gameOver = true;
+  state.stage = 'ended';
+  $(overlayId).classList.add('active');
+}
+function failEnding() {
+  playSound('sfx-alarm');
+  $('#ambientLight').setAttribute('light', 'intensity', 0.1);
+  $('#mainLight').setAttribute('light', 'intensity', 0);
+  endGame('#failOverlay');
+}
+function successEnding() {
+  playSound('sfx-success');
+  endGame('#successOverlay');
+}
+function secretEnding() {
+  state.contaminationPaused = true;
+  toast('"Subject 07 recognised."');
+  setTimeout(() => endGame('#secretOverlay'), 1500);
+}
 
-  /* MODAL OPERATIONAL DIALOG FRAMEWORKS */
-  .terminal-modal-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(4, 6, 9, 0.92);
-    z-index: 50;
-    align-items: center;
-    justify-content: center;
-    pointer-events: all;
-  }
+}
 
-  .terminal-modal-backdrop.active {
-    display: flex;
-  }
-
-  .modal-hardware-enclosure {
-    background: var(--bg-surface);
-    border: 2px solid var(--border-glow);
-    padding: 28px 36px;
-    width: 440px;
-    border-radius: 6px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.85);
-    position: relative;
-  }
-
-  .modal-hardware-enclosure h2 {
-    margin: 0 0 8px 0;
-    font-size: 16px;
-    letter-spacing: 1.5px;
-    color: var(--neon-terminal);
-    text-transform: uppercase;
-    text-shadow: 0 0 6px var(--terminal-glow);
-  }
-
-  .modal-hardware-enclosure .diagnostic-subtext {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  .terminal-abort-btn {
-    margin-top: 20px;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-
-  .terminal-abort-btn:hover {
-    color: var(--color-danger);
-  }
-
-  /* MATRIX INPUT SUBSYSTEM: NUMERIC PAD */
-  #keypad-io-window {
-    font-size: 28px;
-    letter-spacing: 8px;
-    background: #06090d;
-    border: 1px solid #1f293a;
-    padding: 12px 0;
-    margin-bottom: 18px;
-    color: var(--neon-terminal);
-    min-height: 1.4em;
-    border-radius: 4px;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
-  }
-
-  #keypad-io-window.denied-pulse {
-    color: var(--color-danger);
-    animation: flash-error 0.2s ease 2;
-  }
-
-  #keypad-io-window.accepted-pulse {
-    color: var(--color-success);
-  }
-
-  @keyframes flash-error {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
-  }
-
-  .keypad-grid-layout {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .keypad-grid-layout button {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-    border: 1px solid var(--border-glow);
-    padding: 16px 0;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-    border-radius: 4px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-
-  .keypad-grid-layout button:hover {
-    background: var(--border-glow);
-    border-color: var(--text-secondary);
-  }
-
-  .keypad-grid-layout button:active {
-    background: var(--neon-terminal);
-    color: var(--bg-darker);
-  }
-
-  /* OPTICAL ARRAY ALIGNMENT LAYER */
-  .optical-conduit-row {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin: 20px 0;
-  }
-
-  .refractor-node-casing {
-    width: 85px;
-    height: 85px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-glow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: border-color 0.2s, background 0.2s;
-  }
-
-  .refractor-node-casing:hover {
-    border-color: var(--color-cyan);
-    background: rgba(0, 240, 255, 0.05);
-  }
-
-  .refractor-vector-indicator {
-    font-size: 28px;
-    color: #ffffff;
-    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-
-  .refractor-angular-value {
-    font-size: 11px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
-
-  /* LOGIC CRYPT SEQUENCE MATRIX DECRYPTOR */
-  .crypt-input-sequence {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    margin: 15px 0;
-  }
-
-  .crypt-char-node {
-    flex: 1;
-    height: 48px;
-Use code with caution.background: #06090d;border: 1px solid var(--border-glow);color: var(--color-cyan);font-size: 22px;font-weight: bold;display: flex;align-items: center;justify-content: center;border-radius: 4px;cursor: pointer;}.crypt-char-node:hover {border-color: var(--color-cyan);}/* BINARY BRIDGE TOGGLE CONTROL MATRIX */.binary-matrix-grid {display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;margin: 15px 0;}.binary-toggle-switch {height: 44px;background: #06090d;border: 1px solid var(--border-glow);color: var(--text-secondary);font-size: 16px;font-weight: bold;display: flex;align-items: center;justify-content: center;border-radius: 4px;cursor: pointer;transition: all 0.2s;}.binary-toggle-switch.state-active {background: rgba(0, 255, 102, 0.15);border-color: var(--neon-terminal);color: var(--neon-terminal);box-shadow: 0 0 8px rgba(0, 255, 102, 0.2);}/* RESISTANCE GRID NODE SLIDER PANEL */.frequency-slider-assembly {margin: 20px 0;text-align: left;}.slider-channel-row {margin-bottom: 12px;}.slider-channel-row label {display: flex;justify-content: space-between;font-size: 11px;color: var(--text-secondary);margin-bottom: 4px;}.slider-channel-row input[type="range"] {width: 100%;background: var(--bg-elevated);accent-color: var(--color-warning);cursor: pointer;}CONTAINMENT FIELD METER0%SYSTEM INITIALIZINGDecrypt structural data vectors to isolate structural leaks.CURRENT VECTOR OBJECTIVEAnalyze environment arrays to resolve substation processing blockades.CORE VENT CLOSE15:00CLICK CANVAS PLATFORM TO ENGAGE DETECTIVE VISIONVECTOR ISOLATION BLOCKADEEmergency warning protocols active inside containment grid 07. The terminal matrices have auto-encrypted using structural environment telemetry data footprints logged by field technicians. Teachers will be utterly paralyzed by this mathematical isolation layout.ENGAGE INTERFACECONTAINMENT BALANCEDAll core relays reporting functional parity metrics. The energy breach fields are stabilized, locking down the terminal grid parameters.RE-RUN INFRASTRUCTURE SIMULATIONGRID DECOUPLING INITIATEDCore stabilization operations breached time tolerances. Substation structures automated lockdown protocols permanently.FORCE REBOOT ATTEMPTDECRYPTION CODES: NODE ALPHAIsolate numeric code: Multiply the atomic sequence number of the first elemental Noble Gas by the structural Carbon atomic metric contained within standard molecular Glucose formulas.123456789CLR0ENT[DISENGAGE INTERACTION]OPTICAL REFRACTOR ROUTERAlign refractor paths. Trace directional matrix indices sequence notation stamped inside server cluster wall configurations.↑0°↑0°↑0°[DISENGAGE INTERACTION]CRYPTOGRAPHIC ALPHA CORESToggle individual nodes to spell out the sequence solution. Clue hidden under station base: "Opposite of failure, matching lab standard objective titles."AAAAAA[DISENGAGE INTERACTION]BINARY NETWORK STABILISERBypass grid locks by flipping registers. Clue text: "Convert the numerical age requirement for standard driver verification parameters into an 8-bit true sequence." (Age: 16)00000000[DISENGAGE INTERACTION]FREQUENCY HARMONIZER BLOCKModulate slider values to capture perfect core ratios. The target values are determined by: [Light Pipes Count] for Node A, and [Main Laboratory Pillar Count] for Node B.NODE RESISTANCE R-A0NODE RESISTANCE R-B0[DISENGAGE INTERACTION]//---------------------------------------------------------// GLOBAL APPLICATION ENGINE VARIABLES & STATES//---------------------------------------------------------let gameActive = false;let activeOverlay = true;let scoreMetricAccumulator = 0;let activeDialogBackdrop = null;let globalTickerTime = 900; // 15:00 In Total Sequential Secondslet tickerIntervalThread = null;// SYSTEM OBJECTIVE CONFIGURATION DICTIONARIESconst operationalObjectives = ["Locate Node Alpha. Access numeric keypad array code logs.","Bypass Route Array Beta. Calibrate refractor rotation conduits.","Decompile Gamma Matrix Cores. Target sequence strings verification.","Resolve Switchboard Delta registers. Translate driver metric binary bounds.","Tune Epsilon Harmonizer sliders. Match ambient lab item quantities.","Grid balanced. Advance immediately to the Extraction Safety Zone to lock down configuration runtime."];// STAGE COMPLETION FLAGS DETECTOR METRICSlet stationCompletionStates = {alpha: false,beta: false,gamma: false,delta: false,epsilon: false};//---------------------------------------------------------// SYNTHETIC INTERACTION SOUND SYSTEM GENERATOR CORE (WEB AUDIO API)//---------------------------------------------------------const SoundGeneratorEngine = {audioContextCtx: null,initializeContext: function() {if (!this.audioContextCtx) {this.audioContextCtx = new (window.AudioContext || window.webkitAudioContext)();}},playBeepTone: function(frequency, duration, type = 'sine') {this.initializeContext();if (!this.audioContextCtx) return;const osc = this.audioContextCtx.createOscillator();const gainNode = this.audioContextCtx.createGain();osc.type = type;osc.frequency.value = frequency;gainNode.gain.setValueAtTime(0.12, this.audioContextCtx.currentTime);gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContextCtx.currentTime + duration);osc.connect(gainNode);gainNode.connect(this.audioContextCtx.destination);osc.start();osc.stop(this.audioContextCtx.currentTime + duration);},triggerInputTone: function() { this.playBeepTone(880, 0.08, 'sine'); },triggerSuccessTone: function() {this.playBeepTone(587.33, 0.1, 'triangle');setTimeout(() => this.playBeepTone(880, 0.2, 'triangle'), 100);},triggerFailureTone: function() {this.playBeepTone(220, 0.25, 'sawtooth');setTimeout(() => this.playBeepTone(147, 0.3, 'sawtooth'), 150);}};//---------------------------------------------------------// LIFECYCLE MANAGEMENT IMPLEMENTATION PIPELINES//---------------------------------------------------------function executeSystemBoot() {document.getElementById("initialization-screen").classList.remove("active");document.getElementById("crosshair-element").classList.add("visible");document.getElementById("hud-bottom-left").classList.add("active");gameActive = true;activeOverlay = false;// Fire synthetic alert context engineSoundGeneratorEngine.playBeepTone(440, 0.15, 'sine');// Trigger full browser lock mechanism frame safelyconst primarySceneEl = document.querySelector('a-scene');if (primarySceneEl.canvas) {primarySceneEl.canvas.requestPointerLock();} else {primarySceneEl.addEventListener('render-target-loaded', () => {primarySceneEl.canvas.requestPointerLock();});}// Spin engine loop ticker clockinitializeClockCountdown();refreshObjectiveFeedTracker(0);// Track dynamic mouse prompt setup temporary layerconst canvasHintNode = document.getElementById("mouse-lock-prompt");canvasHintNode.style.opacity = 1;setTimeout(() => { canvasHintNode.style.opacity = 0; }, 4500);}function initializeClockCountdown() {tickerIntervalThread = setInterval(() => {if (!gameActive) return;globalTickerTime--;let minutes = Math.floor(globalTickerTime / 60);let seconds = globalTickerTime % 60;seconds = seconds < 10 ? "0" + seconds : seconds;document.getElementById("countdown-display").innerText = ${minutes}:${seconds};if (globalTickerTime <= 0) {triggerFacilityFailureLockdown();}}, 1000);}function triggerFacilityFailureLockdown() {gameActive = false;clearInterval(tickerIntervalThread);document.exitPointerLock();hideActiveSystemDialogs();document.getElementById("termination-screen").classList.add("active");SoundGeneratorEngine.triggerFailureTone();}function triggerFacilityVictorySequence() {gameActive = false;clearInterval(tickerIntervalThread);document.exitPointerLock();hideActiveSystemDialogs();document.getElementById("neutralization-screen").classList.add("active");SoundGeneratorEngine.triggerSuccessTone();}function modifyContainmentParity(deltaAmount) {scoreMetricAccumulator = Math.min(100, Math.max(0, scoreMetricAccumulator + deltaAmount));document.getElementById("hud-progress-fill").style.width = scoreMetricAccumulator + "%";document.getElementById("hud-percentage-metric").innerText = scoreMetricAccumulator + "%";}function refreshObjectiveFeedTracker(index) {document.getElementById("objective-body-text").innerText = operationalObjectives[index];document.getElementById("hud-operation-status").innerText = PHASE VECTOR 0${index + 1};}//---------------------------------------------------------// SPATIAL CURSOR & CLICK TARGET BINDING CONTEXTS//---------------------------------------------------------document.addEventListener('DOMContentLoaded', () => {const rayCursorNode = document.querySelector('a-cursor');const visualCrosshairWidget = document.getElementById('crosshair-element');// Attach activation sizing parameters hooksrayCursorNode.addEventListener('mouseenter', () => {if (gameActive && !activeDialogBackdrop) {visualCrosshairWidget.classList.add('active-target');}});rayCursorNode.addEventListener('mouseleave', () => {if (gameActive && !activeDialogBackdrop) {visualCrosshairWidget.classList.remove('active-target');}});// Hardware click router mappingsdocument.getElementById('physical-node-alpha').addEventListener('click', () => {evaluateNodeAccessAuthorization('alpha', 'modal-station-alpha');});document.getElementById('physical-node-beta').addEventListener('click', () => {evaluateNodeAccessAuthorization('beta', 'modal-station-beta');});document.getElementById('physical-node-gamma').addEventListener('click', () => {evaluateNodeAccessAuthorization('gamma', 'modal-station-gamma');});document.getElementById('physical-node-delta').addEventListener('click', () => {evaluateNodeAccessAuthorization('delta', 'modal-station-delta');});document.getElementById('physical-node-epsilon').addEventListener('click', () => {evaluateNodeAccessAuthorization('epsilon', 'modal-station-epsilon');});// Cradle proximity validation check mapping hookdocument.getElementById('extraction-cradle-rig').addEventListener('click', () => {validateExtractionCradleProximity();});// Secondary recovery safety lock tracking if screen cleareddocument.querySelector('a-scene').addEventListener('click', () => {if (gameActive && !activeDialogBackdrop) {document.querySelector('a-scene').canvas.requestPointerLock();}});});function evaluateNodeAccessAuthorization(nodeKey, modalTargetId) {if (!gameActive) return;if (stationCompletionStates[nodeKey]) {SoundGeneratorEngine.triggerInputTone();return;}presentSystemDialog(modalTargetId);}function presentSystemDialog(modalId) {document.exitPointerLock();hideActiveSystemDialogs();activeDialogBackdrop = document.getElementById(modalId);activeDialogBackdrop.classList.add('active');document.getElementById('crosshair-element').style.display = 'none';}function terminateModalTransactions() {hideActiveSystemDialogs();}function hideActiveSystemDialogs() {if (activeDialogBackdrop) {activeDialogBackdrop.classList.remove('active');activeDialogBackdrop = null;document.getElementById('crosshair-element').style.display = 'block';setTimeout(() => {if (gameActive) document.querySelector('a-scene').canvas.requestPointerLock();}, 150);}}//---------------------------------------------------------// SUB-STATION INTERACTIVE OPERATIONS DECKS MAPPED CALCULATIONS//---------------------------------------------------------// DECK ALPHA OPERATIONAL STORAGE PIPELINESlet keypadPayloadBuffer = "";const alphaCorrectCodePassphrase = "12"; // Helium Atomic Key (2) * Glucose Carbon atoms metric count (6) = 12function appendKeypadDigit(digitChar) {SoundGeneratorEngine.triggerInputTone();if (keypadPayloadBuffer.length < 6) {keypadPayloadBuffer += digitChar;document.getElementById("keypad-io-window").innerText = keypadPayloadBuffer;}}function purgeKeypadDigits() {SoundGeneratorEngine.triggerInputTone();keypadPayloadBuffer = "";const frame = document.getElementById("keypad-io-window");frame.innerText = "";frame.classList.remove("denied-pulse");}function validateKeypadMatrix() {const windowFrame = document.getElementById("keypad-io-window");if (keypadPayloadBuffer === alphaCorrectCodePassphrase) {stationCompletionStates.alpha = true;windowFrame.classList.add("accepted-pulse");windowFrame.innerText = "PARITY OK";SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-alpha").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(1);}, 1000);} else {SoundGeneratorEngine.triggerFailureTone();windowFrame.classList.add("denied-pulse");windowFrame.innerText = "DENIED";setTimeout(() => { purgeKeypadDigits(); }, 1200);}}// DECK BETA OPERATIONAL STORAGE PIPELINESlet currentConduitVectors =;const targetConduitVectorsSolution =; // 90, 180, 270 alignment index positions mapping stringsfunction toggleConduitVector(vectorIndex) {SoundGeneratorEngine.triggerInputTone();currentConduitVectors[vectorIndex] = (currentConduitVectors[vectorIndex] + 1) % 4;const mechanicalRotationDegrees = currentConduitVectors[vectorIndex] * 90;const DOMArrowNode = document.getElementById(vector-arrow-${vectorIndex});DOMArrowNode.style.transform = rotate(${mechanicalRotationDegrees}deg);document.getElementById(vector-deg-${vectorIndex}).innerText = mechanicalRotationDegrees + "°";if (JSON.stringify(currentConduitVectors) === JSON.stringify(targetConduitVectorsSolution)) {stationCompletionStates.beta = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-beta").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(2);}, 1000);}}// DECK GAMMA OPERATIONAL STORAGE PIPELINESlet alphaCryptUserArray = ['A', 'A', 'A', 'A', 'A', 'A'];const targetCryptSequenceSolution = ['S', 'U', 'C', 'C', 'E', 'S']; // Reverse string decryption map solution cluefunction cycleCryptCharacter(indexPosition) {SoundGeneratorEngine.triggerInputTone();let currentCharCodeAscii = alphaCryptUserArray[indexPosition].charCodeAt(0);currentCharCodeAscii++;if (currentCharCodeAscii > 90) currentCharCodeAscii = 65; // Bound roll loop constraint limitalphaCryptUserArray[indexPosition] = String.fromCharCode(currentCharCodeAscii);document.getElementById(crypt-char-${indexPosition}).innerText = alphaCryptUserArray[indexPosition];if (JSON.stringify(alphaCryptUserArray) === JSON.stringify(targetCryptSequenceSolution)) {stationCompletionStates.gamma = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-gamma").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(3);}, 1000);}}// DECK DELTA OPERATIONAL STORAGE PIPELINESlet activeBinaryRegistersArray =;const targetBinarySolutionPattern =; // Binary translation calculation value array representation for value 16function toggleBinaryBit(registerBitIndex) {SoundGeneratorEngine.triggerInputTone();activeBinaryRegistersArray[registerBitIndex] = activeBinaryRegistersArray[registerBitIndex] === 0 ? 1 : 0;const DOMButtonNode = document.getElementById(bin-switch-${registerBitIndex});DOMButtonNode.innerText = activeBinaryRegistersArray[registerBitIndex];if (activeBinaryRegistersArray[registerBitIndex] === 1) {DOMButtonNode.classList.add("state-active");} else {DOMButtonNode.classList.remove("state-active");}if (JSON.stringify(activeBinaryRegistersArray) === JSON.stringify(targetBinarySolutionPattern)) {stationCompletionStates.delta = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-delta").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(4);}, 1000);}}// DECK EPSILON OPERATIONAL STORAGE PIPELINESconst targetResistanceSliderValA = 3; // Equivalent to ceiling context light pipe elements countconst targetResistanceSliderValB = 4; // Equivalent to layout laboratory corner structural support pillars countfunction processSliderAdjustment() {SoundGeneratorEngine.triggerInputTone();const currentValA = parseInt(document.getElementById("freq-slider-a").value);const currentValB = parseInt(document.getElementById("freq-slider-b").value);document.getElementById("slider-val-lbl-a").innerText = currentValA;document.getElementById("slider-val-lbl-b").innerText = currentValB;if (currentValA === targetResistanceSliderValA && currentValB === targetResistanceSliderValB) {stationCompletionStates.epsilon = true;SoundGeneratorEngine.triggerSuccessTone();modifyContainmentParity(20);setTimeout(() => {hideActiveSystemDialogs();document.getElementById("physical-node-epsilon").querySelector('a-box').setAttribute("color", "#2e7d32");refreshObjectiveFeedTracker(5);}, 1000);}}//---------------------------------------------------------// WIN CONDITION: CRADLE ZONE COORDINATE PARITY VALIDATOR//---------------------------------------------------------function validateExtractionCradleProximity() {if (!gameActive) return;// Check if every encryption sub-station has logged complete validation indicatorsconst pathBalanced = Object.values(stationCompletionStates).every(state => state === true);if (pathBalanced) {// Pull dynamic vectors coordinates from look-control rigging engine pathsconst playerCoordinatesPosition = document.getElementById("player-rig").getAttribute("position");// Verify alignment parameters boundaries match extraction field coordinates constraintsconst horizontalBoundMatch = Math.abs(playerCoordinatesPosition.x) <= 2.25;const longitudinalBoundMatch = Math.abs(playerCoordinatesPosition.z - 3.5) <= 1.5;if (horizontalBoundMatch && longitudinalBoundMatch) {triggerFacilityVictorySequence();} else {SoundGeneratorEngine.triggerInputTone();// Fire proximity displacement notification alerts to structural text logsdocument.getElementById("hud-instruction-feed").innerText = "POSITION DISPLACED: Step entirely inside the green boundary perimeter line.";setTimeout(() => {document.getElementById("hud-instruction-feed").innerText = "Run metrics confirmation sequence by stepping into Extraction Cradle.";}, 3000);}} else {SoundGeneratorEngine.triggerInputTone();document.getElementById("hud-instruction-feed").innerText = "ACCESS REJECTED: Decrypt all 5 sub-station terminals before requesting extraction routing.";setTimeout(() => {document.getElementById("hud-instruction-feed").innerText = "Calibrate core systems to prevent lockout sequence parameters.";}, 3000);}}
+if (window.AFRAME) {
+  document.querySelector('a-scene').addEventListener('loaded', initGame);
+} else {
+  window.addEventListener('load', () => {
+    if (window.AFRAME) {
+      const scene = document.querySelector('a-scene');
+      if (scene.hasLoaded) initGame();
+      else scene.addEventListener('loaded', initGame);
+    }
+  });
+}
+</script>
+</body>
+</html>
