@@ -58,7 +58,7 @@ button:hover{background:var(--c);color:#041014}
 
 <div id="introOverlay" class="overlay active"><h1 style="color:#ff5e6c">LAB 07 — CONTAINMENT BREACH</h1>
 <p>Nexonyx Biotech, Sublevel 4. 03:14.<br><br>Dr. Alden Voss ran gene-splicing trials on an unlisted subject — logged only as "Subject 07" — without clearance. Forty minutes ago the containment pod cracked. Power failed. Comms went dark. You're the only technician still on-site.<br><br>Restore power, stabilize the sample, and reach the containment override before contamination seals the room for good. The incident board on the west wall has hints if you get stuck — but the real clues are scattered through the lab.</p>
-<div style="border:1px solid #1d4452;padding:10px 16px;margin:0 0 20px;font-size:13px;line-height:1.9;color:#9ad8e8;background:#071014">WASD move · Mouse look · Click to interact<br>SHIFT run · F flashlight · E EMP (stuns the creature) · ESC frees the mouse</div><button id="enterBtn">ENTER THE LAB</button></div>
+<div style="border:1px solid #1d4452;padding:10px 16px;margin:0 0 20px;font-size:13px;line-height:1.9;color:#9ad8e8;background:#071014">WASD to walk · Move the mouse to look around<br>Click on glowing things to use them · ESC frees the mouse</div><button id="enterBtn">ENTER THE LAB</button></div>
 <div id="failOverlay" class="overlay"><h1 style="color:#ff5e6c">CONTAINMENT LOST</h1><p>Contamination reached 100%. The outer door seals automatically. Whatever Voss was hiding down here, it stays hidden — and so do you.</p><button onclick="location.reload()">RESTART</button></div>
 <div id="successOverlay" class="overlay"><h1 style="color:#3ddc8a">CONTAINMENT RESTORED</h1><p>Override accepted. The blast door grinds open. You make it out before the seal fails — Voss's notes still burning a hole in your pocket.</p><button onclick="location.reload()">RESTART</button></div>
 <div id="secretOverlay" class="overlay"><h1 style="color:#ffb020">"SUBJECT 07 RECOGNISED."</h1>
@@ -66,7 +66,7 @@ button:hover{background:var(--c);color:#041014}
 
 <div id="modal"><div class="mb"><h2 id="mt"></h2><div class="sub" id="ms"></div><div id="mc"></div><button class="mclose" id="mx">close</button></div></div>
 
-<a-scene id="scene" background="color:#05090b" fog="type:exponential;color:#081216;density:0.02" renderer="antialias:true" loading-screen="enabled:false">
+<a-scene id="scene" background="color:#05090b" fog="type:exponential;color:#081216;density:0.014" renderer="antialias:true" loading-screen="enabled:false">
   <a-entity id="rig" position="0 0 4"><a-camera position="0 1.6 0" fov="75" look-controls="pointerLockEnabled:true" wasd-controls="acceleration:60" labcollide>
     <a-cursor raycaster="objects:.clickable;far:14" material="opacity:0" geometry="radiusInner:.001;radiusOuter:.002"></a-cursor></a-camera></a-entity>
   <a-entity id="amb" light="type:ambient;color:#7fa8b8;intensity:.18"></a-entity>
@@ -116,14 +116,14 @@ mk('a-plane',{rotation:'90 0 0',position:'0 5 0',width:14,height:14,material:M('
 /* ceiling: beams, lights, pipes, vents */
 const lamps=[],panels=[];
 [-3.5,3.5].forEach(x=>B(x,4.88,0,.3,.24,14,M('#141d21')));
-[[-3.5,-3],[3.5,-3],[-3.5,3],[3.5,3]].forEach(([x,z])=>{panels.push(B(x,4.93,z,1.8,.06,1,E('#eaf8ff',.05)));lamps.push(L(x,4.3,z,'#dff4ff',0,13))});
+[[-3.5,-3],[3.5,-3],[-3.5,3],[3.5,3]].forEach(([x,z])=>{panels.push(B(x,4.93,z,1.8,.06,1,E('#eaf8ff',.05)));lamps.push(L(x,4.3,z,'#dff4ff',0,22))});
 [['0 4.55 -6.8','0 0 90'],['0 4.55 6.8','0 0 90'],['-6.8 4.4 0','90 0 0'],['6.8 4.4 0','90 0 0']].forEach(([p,r],i)=>{mk('a-cylinder',{position:p,rotation:r,radius:.09,height:13.6,material:M(i%2?'#4a5e66':'#6b7f88')})});
 for(let i=0;i<3;i++){const x=-4+i*4;B(x,4.97,0,1.2,.04,.8,M('#0a0f11'));for(let s=-3;s<=3;s++)B(x,4.94,s*.1,1.1,.02,.03,M('#344a53'))}
 [[-6.3,-6.3],[6.3,-6.3],[-6.3,6.3],[6.3,6.3]].forEach(([x,z])=>{const b=S(x,4.5,z,.13,E('#ff2b3d',1.2));pulse(b,'material.emissiveIntensity',.1,700)});
 const red=[L(-4,2.5,-3,'#ff2b3d',0,10),L(4,2.5,2,'#ff2b3d',0,10)];
 const redOn=on=>red.forEach((r,i)=>{r.removeAttribute('animation__r');r.setAttribute('light','intensity',0);if(on)r.setAttribute('animation__r',`property:light.intensity;from:.1;to:1.2;dir:alternate;loop:true;dur:${900+i*250};easing:easeInOutSine`)});
 redOn(true);
-const setPower=on=>{lamps.forEach(l=>l.setAttribute('light','intensity',on?1.9:0));panels.forEach(p=>p.setAttribute('material','emissiveIntensity',on?1.5:.05));$('#amb').setAttribute('light','intensity',on?.95:.18)};
+const setPower=on=>{lamps.forEach(l=>l.setAttribute('light','intensity',on?.8:0));panels.forEach(p=>p.setAttribute('material','emissiveIntensity',on?1.5:.05));$('#amb').setAttribute('light','intensity',on?1.7:.18)};
 
 /* ---------- containment pod ---------- */
 C(0,.12,-5.8,1.5,.24,M('#10181b','metalness:.7'));
@@ -281,143 +281,53 @@ if(window.AFRAME){
 })();
 </script>
 <style>
-#nexus{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);max-width:640px;width:calc(100% - 40px);background:#050d11e8;border:1px solid #1d4452;border-left:3px solid #27d3ff;padding:9px 16px;font:13px/1.5 'Courier New',monospace;color:#d8f3fa;z-index:12;opacity:0;transition:opacity .5s;pointer-events:none;text-align:center}
+#nexus{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);max-width:660px;width:calc(100% - 40px);background:#050d11ee;border:1px solid #1d4452;border-left:3px solid #27d3ff;padding:10px 18px;font:14px/1.5 'Courier New',monospace;color:#d8f3fa;z-index:12;opacity:0;transition:opacity .5s;pointer-events:none;text-align:center}
 #nexus.show{opacity:1}#nexus b{color:#27d3ff;letter-spacing:2px;margin-right:8px}
-#hurt{position:fixed;inset:0;pointer-events:none;z-index:7;opacity:0;background:radial-gradient(ellipse at center,#0000 35%,#ff1030cc 100%)}
 #rank{margin:0 0 20px;font-size:15px;color:#ffd25a;letter-spacing:2px}
-#radar{position:fixed;right:18px;bottom:48px;width:150px;height:150px;z-index:8;border-radius:50%;border:2px solid #1d6b4a;box-shadow:0 0 18px #3ddc8a33;pointer-events:none}
-a-scene canvas{filter:contrast(1.1) saturate(1.12)}
-a-scene.shake canvas{animation:sk .55s}@keyframes sk{0%,100%{transform:none}15%{transform:translate(-14px,6px)}30%{transform:translate(12px,-8px)}45%{transform:translate(-9px,-5px)}60%{transform:translate(7px,6px)}80%{transform:translate(-3px,2px)}}
-#meterBox.pulse{animation:mp .9s}@keyframes mp{0%,100%{box-shadow:none}30%{box-shadow:0 0 28px 6px #ff3b4e;border-color:#ff3b4e}}
-#static{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:7;image-rendering:pixelated;opacity:0;mix-blend-mode:screen}
 #jsc{position:fixed;inset:0;width:100%;height:100%;z-index:50;display:none;pointer-events:none}
+#alive{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000e;z-index:45;font-family:'Courier New',monospace;text-align:center;pointer-events:none;padding:30px}
+#alive h1{color:#ff3b4e;font-size:clamp(34px,8vw,86px);letter-spacing:6px;margin:0 0 18px;text-shadow:0 0 30px #f00;animation:ali .3s steps(2) infinite}
+#alive p{color:#d8f3fa;font-size:clamp(14px,2vw,20px);max-width:640px;line-height:1.7;margin:0}
+@keyframes ali{50%{transform:translate(4px,-3px)}}
 </style>
-<div id="nexus"></div><div id="hurt"></div>
+<div id="nexus"></div>
+<div id="alive"><h1>IT'S ALIVE</h1><p>The sample you just sequenced has woken up.<br>The gene splice brought Subject 07 back to life — and it has escaped into the vents.<br><br>Calm the lab before the contamination spreads.</p></div>
 <script>
-(function(){
-const $=s=>document.querySelector(s);
-const w=setInterval(()=>{if(window.LAB&&$('a-camera')&&$('a-camera').object3D){clearInterval(w);go()}},200);
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&$('#world')){clearInterval(w);go()}},200);
 function go(){
-const L=window.LAB,sc=$('#scene'),cam=$('a-camera'),T=AFRAME.THREE;
-/* ---------- NEXUS: the lab's AI narrator (captions + synthesized voice) ---------- */
-let VO=null;const pickVoice=()=>{const v=speechSynthesis.getVoices().filter(x=>/^en/i.test(x.lang));for(const r of [/Natural.*(Guy|Ryan|Davis|Brian|Christopher|Eric)/i,/Google UK English Male/i,/Daniel/i,/Alex/i,/Microsoft (Guy|Ryan|David|Mark)/i,/Natural/i,/Google US English/i]){const m=v.find(x=>r.test(x.name));if(m)return m}return v[0]||null};
-try{speechSynthesis.onvoiceschanged=()=>{VO=pickVoice()}}catch(e){}
-function speak(t){try{speechSynthesis.cancel();VO=VO||pickVoice();const al=/warning|critical|close|behind|fifty|ninety/i.test(t);(t.match(/[^.,!?]+[.,!?]*/g)||[t]).forEach(p=>{const q=p.trim(),u=new SpeechSynthesisUtterance(q),end=/[.!?]$/.test(q);if(VO)u.voice=VO;u.pitch=(al?.85:.6)+Math.random()*.14+(end?-.1:.05);u.rate=(al?1.1:.9)+(end?-.06:.03);u.volume=1;speechSynthesis.speak(u)})}catch(e){}}
-let nt;const say=(t,ms)=>{const n=$('#nexus');n.innerHTML='<b>NEXUS//</b>'+t;n.classList.add('show');clearTimeout(nt);nt=setTimeout(()=>n.classList.remove('show'),ms||6500);
- speak(t)};
-window.NEXUS=say;const lines={'POWER FAILURE':'Welcome. The power is off. Find the switches on the left wall.',
- 'SAMPLE UNSTABLE':'Power is on. Now click the glowing green sample.',
- '!! ANOMALY !!':'Warning. Something is moving in the vents.',
- 'MIXTURE UNSTABLE':'It is awake. It freezes when you look at it. Press E to stun it, and hold shift to run.',
- 'VENT UNSEALED':'The vent is open. Press the three buttons in the right order.',
- 'OVERRIDE AVAILABLE':'The exit is unlocked. Finish the four panels on the big door.'};
+const L=window.LAB,sc=$('#scene'),A=new (window.AudioContext||window.webkitAudioContext)();addEventListener('click',()=>A.resume());
+/* on-screen messages from the lab computer (text only) */
+let nt;const say=(t,ms)=>{const n=$('#nexus');n.innerHTML='<b>LAB SYSTEM//</b>'+t;n.classList.add('show');clearTimeout(nt);nt=setTimeout(()=>n.classList.remove('show'),ms||7500)};window.NEXUS=say;
+const hint=$('#startHint');if(hint)hint.textContent='Move the mouse to look · WASD to walk · click glowing things · ESC frees the mouse';
+const lines={'POWER FAILURE':'Welcome. The power is off. Find the switches on the left wall.','SAMPLE UNSTABLE':'Power is on. Now click the glowing green sample.','MIXTURE UNSTABLE':'Subject 07 woke up and escaped into the vents! Calm the lab by picking the right bottle.','VENT UNSEALED':'The vent is open. Press the three buttons in the right order.','OVERRIDE AVAILABLE':'The exit is unlocked. Finish the four panels on the big door.'};
 let start=0;
-new MutationObserver(()=>{const s=$('#stageName').textContent;if(s==='POWER FAILURE')start=Date.now();if(lines[s])say(lines[s],s==='!! ANOMALY !!'?3000:7000);if(s==='!! ANOMALY !!')bigScare();if(s==='MIXTURE UNSTABLE')setTimeout(spawn,8000)}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
-const endLine={'#failOverlay':'Containment lost. Goodbye, technician.','#successOverlay':'Override accepted. The door is open. Run.','#secretOverlay':'Welcome home, Subject 07.'};
-Object.keys(endLine).forEach(id=>{const o=$(id);new MutationObserver(()=>{if(!o.classList.contains('active')||o.dataset.done)return;o.dataset.done=1;say(endLine[id],8000);
+new MutationObserver(()=>{const s=$('#stageName').textContent;if(s==='POWER FAILURE')start=Date.now();if(lines[s])say(lines[s]);
+ if(s==='!! ANOMALY !!'){bigScare();setTimeout(()=>{const a=$('#alive');a.style.display='flex';setTimeout(()=>a.style.display='none',3600);const b=document.querySelector('#world a-sphere[animation]');if(b)b.setAttribute('visible',false)},1050)}}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+const endLine={'#failOverlay':'Containment lost.','#successOverlay':'Override accepted. The door is open.','#secretOverlay':'Welcome home, Subject 07.'};
+Object.keys(endLine).forEach(id=>{const o=$(id);new MutationObserver(()=>{if(!o.classList.contains('active')||o.dataset.done)return;o.dataset.done=1;
  if(id==='#successOverlay'){const t=Math.round((Date.now()-start)/1000),r=t<300?'S':t<480?'A':t<720?'B':'C',d=document.createElement('div');d.id='rank';d.textContent=`TIME ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}  ·  RANK ${r}`;o.insertBefore(d,o.querySelector('button'))}}).observe(o,{attributes:true,attributeFilter:['class']})});
-
-/* ---------- contamination reacts: fog thickens + sickens, warnings, flashlight flicker ---------- */
-const fired={};let lastB=-1,flash=true;
+/* contamination: fog thickens, warnings appear */
+const fired={};let lastB=-1;
 setInterval(()=>{const p=parseInt($('#meterPct').textContent)||0,b=Math.floor(p/5);
- if(b!==lastB){lastB=b;sc.setAttribute('fog',`type:exponential;color:${p<50?'#081216':p<75?'#0b1a10':'#240a0e'};density:${(.02+p*.0003).toFixed(4)}`)}
- [[50,'Contamination at fifty percent.'],[75,'Critical. Seventy-five percent.'],[90,'Ninety percent. Containment failure imminent.']].forEach(([t,m])=>{if(p>=t&&!fired[t]){fired[t]=1;say(m,4000)}});
- if(torch&&flash&&p>60&&Math.random()<.25){torch.setAttribute('light','intensity',.15);setTimeout(()=>torch.setAttribute('light','intensity',1.5),90)}},400);
-
-/* ---------- flashlight (F) ---------- */
-const torch=document.createElement('a-entity');torch.setAttribute('light','type:spot;color:#d8f6ff;angle:32;penumbra:.5;intensity:1.5;distance:16;decay:1.2');cam.appendChild(torch);
-addEventListener('keydown',e=>{if(e.code==='KeyF'){flash=!flash;torch.setAttribute('light','intensity',flash?1.5:0)}});
-const hint=$('#startHint');if(hint)hint.textContent='Mouse look · WASD move · click interact · F flashlight · SHIFT sprint · E EMP · ESC releases mouse';
-
-/* ---------- THE STALKER: moves only when you are not looking at it ---------- */
-const S=document.createElement('a-entity');S.setAttribute('visible',false);$('#world').appendChild(S);
-const part=(t,a)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);S.appendChild(e)};
-const SK='color:#6f8e8a;roughness:.3;metalness:.35',DK='color:#1d2b2c;roughness:.4;metalness:.3',BL='color:#02040a;roughness:.05;metalness:.9',GL='color:#9affe0;emissive:#7affd9;emissiveIntensity:2.6';
-const P=(t,a,par)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);(par||S).appendChild(e);return e};
-S.setAttribute('scale','.92 .92 .92');
-const bod=P('a-entity',{position:'0 .1 0',rotation:'8 0 0'});
-P('a-sphere',{position:'0 1.15 0',radius:.24,scale:'.8 1.45 .6',material:SK},bod);
-P('a-sphere',{position:'0 .85 .03',radius:.15,scale:'1.1 .9 .9',material:SK},bod);
-for(let i=0;i<5;i++)P('a-sphere',{position:`0 ${1.35-i*.12} .12`,radius:.014,material:GL},bod);
-P('a-cylinder',{position:'0 1.62 .02',radius:.04,height:.3,material:SK},bod);
-const head=P('a-entity',{position:'0 1.98 .05'},bod);
-P('a-sphere',{radius:.2,scale:'.95 1.3 1',material:SK},head);
-P('a-sphere',{position:'0 -.17 .07',radius:.1,scale:'.9 1 .9',material:SK},head);
-[-1,1].forEach(m=>{P('a-sphere',{position:`${m*.085} -.01 .14`,rotation:`0 0 ${-m*28}`,radius:.075,scale:'1.5 .65 .45',material:BL},head);P('a-sphere',{position:`${m*.07} .005 .185`,radius:.011,material:'color:#fff;emissive:#fff;emissiveIntensity:2'},head)});
-P('a-box',{position:'0 -.13 .175',width:.07,height:.008,depth:.01,material:'color:#000'},head);
-[[-.1,.14],[.1,.14],[0,.22],[-.05,.2],[.05,.2]].forEach(([x,y])=>P('a-sphere',{position:`${x} ${y} .17`,radius:.012,material:GL},head));
-const arm=sx=>{const sh=P('a-entity',{position:`${sx} 1.4 0`},bod);P('a-cylinder',{position:'0 -.21 0',radius:.022,height:.42,material:SK},sh);P('a-sphere',{position:'0 -.42 0',radius:.03,material:SK},sh);const el=P('a-entity',{position:'0 -.42 0'},sh);P('a-cylinder',{position:'0 -.24 0',radius:.018,height:.48,material:SK},el);for(let f=-1;f<=1;f++){P('a-cylinder',{position:`${f*.025} -.58 0`,rotation:`5 0 ${f*14}`,radius:.007,height:.2,material:SK},el);P('a-sphere',{position:`${f*.03} -.69 0`,radius:.012,material:GL},el)}return[sh,el]};
-const[aL,eL]=arm(-.2),[aR,eR]=arm(.2);
-const leg=x=>{const h=P('a-entity',{position:`${x} .85 0`});P('a-cylinder',{position:'0 -.2 .04',rotation:'-10 0 0',radius:.045,height:.45,material:SK},h);const k=P('a-entity',{position:'0 -.4 .08'},h);P('a-sphere',{radius:.04,material:SK},k);P('a-cylinder',{position:'0 -.2 -.03',rotation:'14 0 0',radius:.032,height:.45,material:SK},k);P('a-box',{position:'0 -.43 .05',width:.07,height:.03,depth:.2,material:DK},k);return h};
-const lL=leg(-.1),lR=leg(.1);
-const eyeL=P('a-entity',{light:'type:point;color:#7affd9;intensity:.8;distance:4',position:'0 1.9 .5'});
-eyeL.setAttribute('animation','property:light.intensity;dir:alternate;loop:true;from:.3;to:1.2;dur:650;easing:easeInOutSine');
-const Z={aL,aR,eL,eR,lL,lR,head};let tk=0,sn=false,lastScr=0;
-function screech(){if(Date.now()-lastScr<12000)return;lastScr=Date.now();const o=A.createOscillator(),g=A.createGain(),t=A.currentTime;o.type='sawtooth';o.frequency.setValueAtTime(2200,t);o.frequency.exponentialRampToValueAtTime(260,t+.7);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.8);o.connect(g);g.connect(A.destination);o.start(t);o.stop(t+.85)}
-function anim(seen,d,v,dx,dz,sp,stn){tk++;const t=Date.now()/1000,r=Math.random,q=k=>Z[k].object3D.rotation;
- if(!seen){if(tk%4===0){sp.x+=dx/d*v*4;sp.z+=dz/d*v*4}const w=t*9;
-  q('aL').x=Math.sin(w)*.5-.15;q('aR').x=-Math.sin(w)*.5-.15;q('aL').z=-.1;q('aR').z=.1;q('eL').x=-.3+Math.sin(w+1)*.3;q('eR').x=-.3-Math.sin(w+1)*.3;q('lL').x=Math.sin(w)*.5;q('lR').x=-Math.sin(w)*.5;q('head').x=.3;q('head').z=Math.sin(w*.5)*.2;sp.y=Math.abs(Math.sin(w))*.05}
- else{if(r()<.3){q('head').z=(r()-.5)*.7;q('head').x=(r()-.3)*.5}q('aL').x=-1.3+r()*.15;q('aR').x=-1.3+r()*.15;q('aL').z=-.25;q('aR').z=.25;q('eL').x=-.4;q('eR').x=-.4;sp.y=0;if(stn){sp.x+=(r()-.5)*.05;sp.z+=(r()-.5)*.05}}}
-let on=false,hb=0,lastWarn=0;const A=new (window.AudioContext||window.webkitAudioContext)();addEventListener('click',()=>A.resume());
-const thump=(f,v,w)=>{const o=A.createOscillator(),g=A.createGain(),t=A.currentTime+(w||0);o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g);g.connect(A.destination);o.start(t);o.stop(t+.2)};
-function place(far){const p=new T.Vector3();cam.object3D.getWorldPosition(p);const c=[[-5.5,-5.5],[5.5,-5.5],[-5.5,5.5],[5.5,5.5],[0,-6],[-6,0],[6,0]].sort((a,b)=>Math.hypot(b[0]-p.x,b[1]-p.z)-Math.hypot(a[0]-p.x,a[1]-p.z));const q=c[far?0:1];S.setAttribute('position',`${q[0]} 0 ${q[1]}`)}
-function spawn(){on=true;place(true);S.setAttribute('visible',true);L.toast('Something is in the room with you...',4000)}
-const pp=new T.Vector3(),fw=new T.Vector3();
-setInterval(()=>{if(!on||L.st.over||$('#modal.active')||['final','chem','vent'].indexOf(L.st.stage)<0)return;
- cam.object3D.getWorldPosition(pp);cam.object3D.getWorldDirection(fw);fw.negate();
- const sp=S.object3D.position,dx=pp.x-sp.x,dz=pp.z-sp.z,d=Math.hypot(dx,dz),dot=(-dx*fw.x-dz*fw.z)/(d||1);
- const stunned=Date.now()<stun,seen=stunned||(dot>.55&&d<14);
- if(seen&&!sn&&!stunned){sn=true;screech();L.flash('#ffffff',160)}if(!seen)sn=false;
- if(!seen&&d<7&&Math.random()<.05&&!L.st.over){L.setPower(false);setTimeout(()=>{if(!L.st.over)L.setPower(true)},70+Math.random()*130)}
- gr.gain.value=d<8?(8-d)/8*.14:0;
- S.object3D.rotation.y=Math.atan2(dx,dz);
- anim(seen,d,(.7+L.st.cont*.008)*.05,dx,dz,sp,stunned);S.object3D.rotation.z=stunned?(Math.random()-.5)*.25:0;
- if(d<1.15&&!stunned&&Date.now()-(window._lh||0)>8000){window._lh=Date.now();L.cont(6);L.snd('bang');L.flash('#ff1030',500);shake();$('#hurt').style.transition='none';$('#hurt').style.opacity=1;requestAnimationFrame(()=>{$('#hurt').style.transition='opacity 1.2s';$('#hurt').style.opacity=0});L.toast('It touched you! +6% contamination');place(true)}
- const now=Date.now();if(d<4.5&&now-lastWarn>25000){lastWarn=now;say('It is close. Behind you.',3500)}
- hb-=50;if(d<9&&hb<=0){hb=300+d*90;thump(55,.5);thump(48,.35,.17);const hu=$('#hurt');hu.style.transition='none';hu.style.opacity=Math.min(.55,(9-d)/12);requestAnimationFrame(()=>{hu.style.transition='opacity .45s';hu.style.opacity=0})}},50);
-
-const gr=A.createGain();gr.gain.value=0;const go2=A.createOscillator();go2.type='sawtooth';go2.frequency.value=38;
-
-/* ---------- 1-second full-screen jumpscare ---------- */
+ if(b!==lastB){lastB=b;sc.setAttribute('fog',`type:exponential;color:${p<50?'#081216':p<75?'#0b1a10':'#240a0e'};density:${(.014+p*.0003).toFixed(4)}`)}
+ [[50,'Contamination is at 50%. Work faster.'],[75,'Danger! Contamination is at 75%.'],[90,'Almost out of time! 90% contaminated.']].forEach(([t,m])=>{if(p>=t&&!fired[t]){fired[t]=1;say(m,5000)}})},400);
+/* quiet background hum */
+const dg=A.createGain(),lp=A.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;dg.gain.value=.02;[55,55.6].forEach(f=>{const o=A.createOscillator();o.type='sine';o.frequency.value=f;o.connect(lp);o.start()});lp.connect(dg);dg.connect(A.destination);
+/* 1-second full-screen jumpscare */
 const jc=document.createElement('canvas');jc.id='jsc';document.body.appendChild(jc);
 function face(g,w,h,t){g.fillStyle='#000';g.fillRect(0,0,w,h);g.save();const j=(Math.random()-.5)*26*(1-t*.5);g.translate(w/2+j,h/2+j*.6);const k=(.8+.7*t)*h/330;g.scale(k,k);
  const gr=g.createRadialGradient(0,-50,20,0,0,250);gr.addColorStop(0,'#a9c7c1');gr.addColorStop(1,'#1b2a2a');g.fillStyle=gr;g.beginPath();g.ellipse(0,0,150,205,0,0,6.3);g.fill();
- g.strokeStyle='#15130d';g.lineWidth=3;[[-60,-195,-30,-120,-70,-65],[70,-190,40,-125,80,-75],[0,-205,8,-150,-6,-110]].forEach(c=>{g.beginPath();g.moveTo(c[0],c[1]);g.lineTo(c[2],c[3]);g.lineTo(c[4],c[5]);g.stroke()});
  [-1,1].forEach(m=>{g.save();g.translate(m*66,-40);g.rotate(m*.55);g.fillStyle='#02040a';g.beginPath();g.ellipse(0,0,72,34,0,0,6.3);g.fill();g.fillStyle='rgba(255,255,255,.8)';g.beginPath();g.arc(-20,-8,7,0,6.3);g.fill();g.restore()});
  g.fillStyle='#000';g.fillRect(-6,10,12,30);
- const o=34+t*85+Math.sin(t*50)*9;g.fillStyle='#000';g.beginPath();g.ellipse(0,112,96,o,0,0,6.3);g.fill();
+ const o=34+t*85+Math.sin(t*50)*9;g.beginPath();g.ellipse(0,112,96,o,0,0,6.3);g.fill();
  g.fillStyle='#efe9d2';for(let n=-8;n<=8;n++){const x=n*11,u=Math.sqrt(Math.max(0,1-(x/96)**2))*o,l=16+Math.abs(Math.sin(n*3.1))*24;g.beginPath();g.moveTo(x-6,112-u);g.lineTo(x,112-u+l);g.lineTo(x+6,112-u);g.fill();g.beginPath();g.moveTo(x-6,112+u);g.lineTo(x,112+u-l*.8);g.lineTo(x+6,112+u);g.fill()}
  g.restore();g.fillStyle=`rgba(255,0,25,${.3*(1-t)})`;g.fillRect(0,0,w,h);for(let n=0;n<14;n++){g.fillStyle=`rgba(255,255,255,${Math.random()*.12})`;g.fillRect(0,Math.random()*h,w,1+Math.random()*3)}
  if(t>.88){g.fillStyle=`rgba(255,255,255,${(t-.88)*8})`;g.fillRect(0,0,w,h)}}
-function scream(){const t=A.currentTime;[1500,1730,900].forEach(f=>{const o=A.createOscillator(),g=A.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.3,t+.9);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+1);o.connect(g);g.connect(A.destination);o.start(t);o.stop(t+1.05)});const b=A.createBuffer(1,A.sampleRate,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const n=A.createBufferSource(),g2=A.createGain();n.buffer=b;g2.gain.value=.45;n.connect(g2);g2.connect(A.destination);n.start(t)}
+function scream(){const t=A.currentTime;[1500,1730,900].forEach(f=>{const o=A.createOscillator(),g=A.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.3,t+.9);g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+1);o.connect(g);g.connect(A.destination);o.start(t);o.stop(t+1.05)});const b=A.createBuffer(1,A.sampleRate,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const n=A.createBufferSource(),g2=A.createGain();n.buffer=b;g2.gain.value=.4;n.connect(g2);g2.connect(A.destination);n.start(t)}
 function bigScare(){jc.width=innerWidth;jc.height=innerHeight;jc.style.display='block';const g=jc.getContext('2d'),t0=performance.now();scream();L.snd('bang');(function f(){const t=(performance.now()-t0)/1000;if(t>=1){jc.style.display='none';return}face(g,jc.width,jc.height,t);requestAnimationFrame(f)})()}
-/* ---------- sprint (Shift) + EMP (E) ---------- */
-let stam=100,shift=false,tired=false,stun=0,empAt=0,lastRun=false;
-const bx=document.createElement('div');bx.className='box';bx.style.cssText='position:fixed;top:86px;left:18px;width:280px;padding:7px 12px;z-index:5;pointer-events:none';
-bx.innerHTML='<div style="font-size:10px;letter-spacing:2px;color:#7fb6c6;display:flex;justify-content:space-between"><span>RUN [SHIFT]</span><span id="emp">EMP [E] READY</span></div>';document.body.appendChild(bx);
-addEventListener('keydown',e=>{if(e.key==='Shift')shift=true;if(e.code==='KeyE')emp()});addEventListener('keyup',e=>{if(e.key==='Shift')shift=false});
-function emp(){if(Date.now()<empAt||L.st.over||$('#modal.active')||L.st.stage==='intro')return;empAt=Date.now()+25000;stun=Date.now()+6000;L.flash('#27d3ff',350);const t=A.currentTime,o=A.createOscillator(),g=A.createGain();o.type='square';o.frequency.setValueAtTime(1400,t);o.frequency.exponentialRampToValueAtTime(60,t+.6);g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.7);o.connect(g);g.connect(A.destination);o.start(t);o.stop(t+.75);
- cam.object3D.getWorldPosition(rv);const r=document.createElement('a-torus');r.setAttribute('position',`${rv.x} .15 ${rv.z}`);r.setAttribute('rotation','90 0 0');r.setAttribute('radius',.5);r.setAttribute('radius-tubular',.05);r.setAttribute('material','color:#27d3ff;emissive:#27d3ff;emissiveIntensity:3;opacity:.8;transparent:true');r.setAttribute('animation','property:scale;to:16 16 16;dur:700;easing:easeOutQuad');$('#world').appendChild(r);setTimeout(()=>r.remove(),800);
- if(on)say('EMP discharged. It will recover in six seconds.',3500);else L.toast('EMP discharged.')}
-setInterval(()=>{const run=shift&&!$('#modal.active');if(run!==lastRun){lastRun=run;cam.setAttribute('wasd-controls','acceleration',run?100:60)}const w=empAt-Date.now();$('#emp').textContent=w>0?`EMP RECHARGING ${Math.ceil(w/1000)}s`:'EMP [E] READY'},50);
-function shake(){const c=$('a-scene');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');const m=$('#meterBox');m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse')}
-/* ambient drone that sours as contamination rises */
-const dg=A.createGain(),lp=A.createBiquadFilter();lp.type='lowpass';lp.frequency.value=300;dg.gain.value=.03;
-const dr=[55,55.6,87.3].map((f,i)=>{const o=A.createOscillator(),g=A.createGain();o.type='sine';o.frequency.value=f;g.gain.value=i>1?0:1;o.connect(g);g.connect(lp);o.start();return g});
-lp.connect(dg);dg.connect(A.destination);
-setInterval(()=>{const p=parseInt($('#meterPct').textContent)||0;dr[2].gain.value=Math.max(0,(p-30)/70)*.2;lp.frequency.value=300+p*8;dg.gain.value=.03+p*.0004},500);
-/* motion tracker: sweeps, and only pings the creature when the sweep passes it */
-const rc=document.createElement('canvas');rc.id='radar';rc.width=rc.height=150;document.body.appendChild(rc);const rg=rc.getContext('2d');
-let sw=0,ping=0,rv=new T.Vector3(),rf=new T.Vector3();
-setInterval(()=>{sw=(sw+.13)%6.2832;const C=75;rg.clearRect(0,0,150,150);rg.fillStyle='#04100ad9';rg.beginPath();rg.arc(C,C,C-2,0,6.3);rg.fill();rg.strokeStyle='#1d6b4a';rg.lineWidth=1;[25,50,72].forEach(r=>{rg.beginPath();rg.arc(C,C,r,0,6.3);rg.stroke()});rg.beginPath();rg.moveTo(C,4);rg.lineTo(C,146);rg.moveTo(4,C);rg.lineTo(146,C);rg.stroke();
- const g=rg.createLinearGradient(C,C,C+Math.cos(sw)*C,C+Math.sin(sw)*C);g.addColorStop(0,'#3ddc8a');g.addColorStop(1,'#3ddc8a00');rg.strokeStyle=g;rg.lineWidth=3;rg.beginPath();rg.moveTo(C,C);rg.lineTo(C+Math.cos(sw)*72,C+Math.sin(sw)*72);rg.stroke();
- rg.fillStyle='#3ddc8a';rg.fillRect(C-3,C-3,6,6);rg.font='9px monospace';rg.fillText('MOTION TRACKER',30,142);
- if(on){cam.object3D.getWorldPosition(rv);cam.object3D.getWorldDirection(rf);rf.negate();const sp=S.object3D.position,dx=sp.x-rv.x,dz=sp.z-rv.z,rx=dx*-rf.z+dz*rf.x,ry=-(dx*rf.x+dz*rf.z),d=Math.hypot(dx,dz),a=Math.atan2(ry,rx);
-  let df=Math.abs(((a-sw)+9.42)%6.2832-3.1416);if(df>3.1416-.18&&Date.now()-ping>1500){ping=Date.now();try{const o=A.createOscillator(),gn=A.createGain();o.frequency.value=900-d*30;gn.gain.setValueAtTime(.08,A.currentTime);gn.gain.exponentialRampToValueAtTime(.001,A.currentTime+.15);o.connect(gn);gn.connect(A.destination);o.start();o.stop(A.currentTime+.16)}catch(e){}}
-  const age=(Date.now()-ping)/1500;if(age<1&&ping){const k=Math.min(d/14,1)*68;rg.fillStyle=`rgba(255,60,70,${1-age})`;rg.beginPath();rg.arc(C+Math.cos(a)*k,C+Math.sin(a)*k,5+(1-age)*4,0,6.3);rg.fill()}}},60);
 }})();
 </script>
-
 
 <style>
 #objectiveBox{font-size:14px!important;max-width:540px!important;background:#071014f2!important;line-height:1.6!important}
@@ -439,7 +349,7 @@ const put=(x,y,z,t)=>{mkr.removeAttribute('animation');mkr.setAttribute('positio
 const MK={'POWER FAILURE':[-6.2,2.7,-2,'POWER SWITCHES'],'SAMPLE UNSTABLE':[-2,2.4,-3,'CLICK THE SAMPLE'],'MIXTURE UNSTABLE':[4.5,2.4,-6.1,'PICK A BOTTLE'],'VENT UNSEALED':[6.2,2.8,-2,'PRESS THE 3 BUTTONS'],'OVERRIDE AVAILABLE':[0,3.3,6.0,'FINISH THE 4 PANELS']};
 const OB={'POWER FAILURE':'STEP 1 of 5 — Turn on the power. Find the sample rack on the LEFT wall and read the vial colours from left to right. Then press the switches with the same coloured dots, in that order. Do not press X.',
 'SAMPLE UNSTABLE':'STEP 2 of 5 — Click the glowing green sample (follow the yellow arrow). Then click a coloured ball and click the slot it belongs in. Each slot shows an element. The colour chart on the back wall tells you which colour matches.',
-'MIXTURE UNSTABLE':'STEP 3 of 5 — The screen on the back wall says PINK. On the colour chart, pink means ALKALI METAL. Click the bottle that is an alkali metal.  (A creature is hunting you: press E to stun it, hold SHIFT to run.)',
+'MIXTURE UNSTABLE':'STEP 3 of 5 — The sample woke up and escaped into the vents! To calm the lab, look at the screen on the back wall: it says PINK. On the colour chart, pink means ALKALI METAL. Click the bottle that is an alkali metal.',
 'VENT UNSEALED':'STEP 4 of 5 — Read the note on the RIGHT wall near the vent. Press the three buttons from the lightest element to the heaviest.',
 'OVERRIDE AVAILABLE':'STEP 5 of 5 — Go to the big door at the front. Finish all 4 panels: HAND SCAN, STABILISER, LASERS and TERMINAL. Notes near the door and on the walls tell you what to enter. Stuck? Click the incident board on the left wall.'};
 /* checklist */
@@ -488,7 +398,7 @@ function puff(){const [x,z]=grates[Math.random()*3|0];nz(5500,.6,'highpass',1.1,
 const sp=[[-5,-1],[5,3]].map(([x,z])=>{mk('a-cylinder',{position:`${x} 4.2 ${z}`,radius:.015,height:1.6,material:M('#0a0f11')});return mk('a-sphere',{position:`${x} 3.4 ${z}`,radius:.07,visible:false,material:E('#ffb040',4)})});
 function spark(){const s=sp[Math.random()*2|0];let n=0;const f=setInterval(()=>{s.setAttribute('visible',n%2===0);if(n%2===0)nz(3200,1,'bandpass',.1,.3);if(++n>5){clearInterval(f);s.setAttribute('visible',false)}},70)}
 /* volumetric light shafts (only once power is back) */
-const shafts=[[-3.5,-3],[3.5,-3],[-3.5,3],[3.5,3]].map(([x,z])=>mk('a-cone',{position:`${x} 2.7 ${z}`,'radius-top':.3,'radius-bottom':1.2,height:4.6,visible:false,material:'color:#bfeaff;opacity:.05;transparent:true;shader:flat;side:double;depthWrite:false'}));
+const shafts=[];
 /* storytelling props: scattered papers, tipped chair, dropped tube */
 for(let i=0;i<11;i++)mk('a-plane',{position:`${(Math.random()-.5)*8} .014 ${(Math.random()-.5)*8+1}`,rotation:`-90 0 ${Math.random()*360}`,width:.3,height:.21,material:'color:#e8e4d0;roughness:1;metalness:0'});
 mk('a-box',{position:'-5.2 .28 2.0',rotation:'0 20 90',width:.5,height:.06,depth:.5,material:M('#2a3c45')});mk('a-box',{position:'-5.2 .56 1.76',rotation:'0 20 90',width:.06,height:.6,depth:.5,material:M('#2a3c45')});
@@ -498,12 +408,23 @@ setInterval(()=>{if(!live())return;const r=Math.random();if(r<.28){tn(1900,900,.
 /* stage reactions */
 function slime(){[[6,1,.5],[5.1,.7,.35],[4.3,.4,.25],[3.5,.9,.17]].forEach(([x,z,r])=>mk('a-circle',{position:`${x} .02 ${z}`,rotation:'-90 0 0',radius:r,material:E('#39ff88',1.4)+';opacity:.75;transparent:true'}));[0,1].forEach(i=>{const z=i*.4-.2,d=mk('a-sphere',{position:`6.5 1.6 ${z}`,radius:.03,material:E('#39ff88',2)});d.setAttribute('animation',`property:position;from:6.5 1.6 ${z};to:6.5 .03 ${z};dur:900;loop:true;delay:${i*500};easing:easeInQuad`)})}
 new MutationObserver(()=>{const s=$('#stageName').textContent;if(s!=='POWER FAILURE'&&s!=='SYSTEM BOOT')shafts.forEach(x=>x.setAttribute('visible',true));if(s==='!! ANOMALY !!')slime()}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
-/* collectible data chips */
-const lore=[[-6.55,1.19,-6.1,'DATA CHIP 1/4 — "Day 12: Subject 07 reacts to light. Not to sound."'],[6.4,.15,-6.4,'DATA CHIP 2/4 — "Day 29: The splice worked. It looked at me. Then it copied my face."'],[6.5,1.1,.7,'DATA CHIP 3/4 — "Day 38: I used my own cells as the base. I told no one."'],[-4.9,.12,6.5,'DATA CHIP 4/4 — "Day 41: If you read this, do not trust the door. Trust the lab. It knows you."']];
-let got=0;const cd=document.createElement('div');cd.className='box';cd.style.cssText='position:fixed;top:300px;right:18px;z-index:5;pointer-events:none;font-size:12px;color:#7fe0ff';cd.textContent='DATA CHIPS 0/4';document.body.appendChild(cd);
-lore.forEach(([x,y,z,m])=>{const c=mk('a-box',{position:`${x} ${y} ${z}`,width:.14,height:.14,depth:.14,material:E('#27d3ff',2.4)});c.setAttribute('animation','property:rotation;to:0 360 0;dur:3000;loop:true;easing:linear');c.classList.add('clickable');const ch=$('#crosshair');
- c.addEventListener('mouseenter',()=>ch.classList.add('hot'));c.addEventListener('mouseleave',()=>ch.classList.remove('hot'));
- c.addEventListener('click',()=>{if(c.dataset.d)return;c.dataset.d=1;c.remove();ch.classList.remove('hot');got++;cd.textContent=`DATA CHIPS ${got}/4`;tn(800,1600,.2,.12);L.toast(m,7000);if(got===4)setTimeout(()=>window.NEXUS('You found every chip. Voss was hiding something about you.',6000),2500)})});
+/* posters + floor ring */
+const poster=(x,c,t,tc)=>{mk('a-plane',{position:`${x} 2.5 6.93`,rotation:'0 180 0',width:1,height:1.3,material:M(c)});mk('a-text',{value:t,position:`${x} 2.5 6.91`,rotation:'0 180 0',align:'center',width:1.7,color:tc})};
+poster(-5.6,'#e8edf0','LAB RULES\n\n1. No running\n2. Wear gloves\n3. Report leaks\n4. Never open the\n   pod alone','#10181b');poster(5.5,'#ffd25a','CAUTION\n\nBIOHAZARD\nSUBLEVEL 4\n\nAUTHORISED\nSTAFF ONLY','#1a1a1a');
+mk('a-ring',{position:'0 .02 .5',rotation:'-90 0 0','radius-inner':1.55,'radius-outer':1.63,material:E('#ffa51f',.8)});
+/* DATA CHIPS: Voss's recorded logs. Only one shows at a time — collect them in order. */
+const lore=[[.6,1.12,.95,'DATA CHIP 1/4 — Dr. Voss\'s secret recorded logs. Find all four, in order, to learn what really happened here.\n"Day 12: Subject 07 reacts to light, not to sound."'],
+[-2.28,.99,-2.85,'DATA CHIP 2/4 — "Day 29: The splice worked. It opened its eyes and looked at me. Then it copied my face."'],
+[6.5,1.1,.55,'DATA CHIP 3/4 — "Day 38: I used my own cells as the base for Subject 07. I told no one."'],
+[-6.2,.91,6.15,'DATA CHIP 4/4 — "Day 41: If you are reading this, the vial by the exit door is me. Touch it, and the lab will know who you are."']];
+let got=0;const cd=document.createElement('div');cd.className='box';cd.style.cssText='position:fixed;top:300px;right:18px;z-index:5;pointer-events:none;font-size:12px;color:#7fe0ff;max-width:230px;line-height:1.5';document.body.appendChild(cd);
+const ch=$('#crosshair');
+function showChip(i){cd.innerHTML=`<b>OPTIONAL: VOSS'S SECRET LOGS ${got}/4</b><br>Look for the glowing cyan cube (with the floating label). It tells the story.`;const[x,y,z,m]=lore[i];
+ const c=mk('a-box',{position:`${x} ${y} ${z}`,width:.16,height:.16,depth:.16,material:E('#27d3ff',2.6)}),t=mk('a-text',{value:`DATA CHIP ${i+1} of 4\nCLICK ME`,position:`${x} ${y+.4} ${z}`,align:'center',width:2,color:'#7fe0ff','look-at':'[camera]'}),r=mk('a-torus',{position:`${x} ${y} ${z}`,rotation:'90 0 0',radius:.22,'radius-tubular':.01,material:E('#27d3ff',2)});
+ c.setAttribute('animation','property:rotation;to:0 360 0;dur:3000;loop:true;easing:linear');r.setAttribute('animation','property:scale;dir:alternate;loop:true;to:1.5 1.5 1.5;dur:900');
+ c.classList.add('clickable');c.addEventListener('mouseenter',()=>ch.classList.add('hot'));c.addEventListener('mouseleave',()=>ch.classList.remove('hot'));
+ c.addEventListener('click',()=>{if(c.dataset.d)return;c.dataset.d=1;c.remove();t.remove();r.remove();ch.classList.remove('hot');got++;tn(800,1600,.2,.12);L.toast(m,9000);if(got<4)showChip(got);else{cd.innerHTML='<b>ALL 4 LOGS FOUND</b>';setTimeout(()=>window.NEXUS('You found all four logs. Voss used his own DNA to build Subject 07. Maybe the vial by the exit knows you...',9000),3000)}})}
+showChip(0);
 }})();
 </script>
 
