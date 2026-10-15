@@ -58,9 +58,15 @@ button:hover{background:var(--c);color:#041014}
 
 <div id="introOverlay" class="overlay active"><h1 style="color:#ff5e6c">LAB 07 — CONTAINMENT BREACH</h1>
 <p>Nexonyx Biotech, Sublevel 4. 03:14.<br><br>Dr. Alden Voss ran gene-splicing trials on an unlisted subject — logged only as "Subject 07" — without clearance. Forty minutes ago the containment pod cracked. Power failed. Comms went dark. You're the only technician still on-site.<br><br>Restore power, stabilize the sample, and reach the containment override before contamination seals the room for good. The incident board on the west wall has hints if you get stuck — but the real clues are scattered through the lab.</p>
-<div style="border:1px solid #1d4452;padding:10px 16px;margin:0 0 20px;font-size:13px;line-height:1.9;color:#9ad8e8;background:#071014">WASD to walk · Move the mouse to look around<br>Click on glowing things to use them · ESC frees the mouse</div><button id="enterBtn">ENTER THE LAB</button></div>
+<div style="border:1px solid #1d4452;padding:14px 20px;margin:0 0 22px;max-width:620px;text-align:left;font-size:13px;line-height:1.8;color:#9ad8e8;background:#071014">
+<b style="color:#27d3ff;letter-spacing:2px">HOW TO PLAY</b><br>
+• <b>WASD</b> to walk. Move the <b>mouse</b> to look. <b>Click</b> glowing things to use them.<br>
+• When you click a note, a panel or anything that opens a window, your mouse is freed so you can use it. When you close it, <b>click once on the room</b> to look around again.<br>
+• Almost nothing here is just decoration. Most things either tell the story or help you solve a puzzle.<br>
+• Remember: <b style="color:#ffd25a">the periodic table is your friend!</b><br>
+• Press <b>N</b> for your notebook: write notes and re-read clues.<br>• Stuck? Press <b>H</b> for an optional hint. Hints only appear when you ask.<br>• Take your time. You have plenty of it.</div><button id="enterBtn">ENTER THE LAB</button></div>
 <div id="failOverlay" class="overlay"><h1 style="color:#ff5e6c">CONTAINMENT LOST</h1><p>Contamination reached 100%. The outer door seals automatically. Whatever Voss was hiding down here, it stays hidden — and so do you.</p><button onclick="location.reload()">RESTART</button></div>
-<div id="successOverlay" class="overlay"><h1 style="color:#3ddc8a">CONTAINMENT RESTORED</h1><p>Override accepted. The blast door grinds open. You make it out before the seal fails — Voss's notes still burning a hole in your pocket.</p><button onclick="location.reload()">RESTART</button></div>
+<div id="successOverlay" class="overlay"><h1 style="color:#3ddc8a">CONTAINMENT RESTORED</h1><p>You punch in the final code and the exit door hisses open. Cold air and daylight pour in. Behind you, the hallway lights die one by one. Whatever Voss made is still out there — but you are free.</p><button onclick="location.reload()">RESTART</button></div>
 <div id="secretOverlay" class="overlay"><h1 style="color:#ffb020">"SUBJECT 07 RECOGNISED."</h1>
 <p>The lights fade to amber as the containment lasers shut down, not in failure but in acknowledgement. The system isn't unlocking the door for you — <em>Subject 07 is</em>.<br><br>A hidden tag flashes across a terminal: <code>PROFILE MATCH: DONOR-LINEAGE</code>. Subject 07 was stabilised using a genomic scaffold taken from one technician — you.<br><br>Every puzzle you solved was the lab confirming your identity. The door was never meant to keep you out — only everyone else.</p><button onclick="location.reload()">RESTART</button></div>
 
@@ -121,9 +127,9 @@ const lamps=[],panels=[];
 for(let i=0;i<3;i++){const x=-4+i*4;B(x,4.97,0,1.2,.04,.8,M('#0a0f11'));for(let s=-3;s<=3;s++)B(x,4.94,s*.1,1.1,.02,.03,M('#344a53'))}
 [[-6.3,-6.3],[6.3,-6.3],[-6.3,6.3],[6.3,6.3]].forEach(([x,z])=>{const b=S(x,4.5,z,.13,E('#ff2b3d',1.2));pulse(b,'material.emissiveIntensity',.1,700)});
 const red=[L(-4,2.5,-3,'#ff2b3d',0,10),L(4,2.5,2,'#ff2b3d',0,10)];
-const redOn=on=>red.forEach((r,i)=>{r.removeAttribute('animation__r');r.setAttribute('light','intensity',0);if(on)r.setAttribute('animation__r',`property:light.intensity;from:.1;to:1.2;dir:alternate;loop:true;dur:${900+i*250};easing:easeInOutSine`)});
+const redOn=on=>red.forEach((r,i)=>{r.removeAttribute('animation__r');r.setAttribute('light','intensity',0);if(on)r.setAttribute('animation__r',`property:light.intensity;from:.1;to:.8;dir:alternate;loop:true;dur:${900+i*250};easing:easeInOutSine`)});
 redOn(true);
-const setPower=on=>{lamps.forEach(l=>l.setAttribute('light','intensity',on?.8:0));panels.forEach(p=>p.setAttribute('material','emissiveIntensity',on?1.5:.05));$('#amb').setAttribute('light','intensity',on?1.7:.18)};
+const setPower=on=>{lamps.forEach(l=>l.setAttribute('light','intensity',on?.8:0));panels.forEach(p=>p.setAttribute('material','emissiveIntensity',on?1.5:.05));$('#amb').setAttribute('light','intensity',on?1.7:.3)};
 
 /* ---------- containment pod ---------- */
 C(0,.12,-5.8,1.5,.24,M('#10181b','metalness:.7'));
@@ -153,7 +159,7 @@ B(-6.92,1.5,-2,.1,1.7,2.1,M('#10181b'));
 const pp=G(-6.85,1.5,-2,90);B(0,0,-.02,2,1.6,.04,M('#1b272d'),0,pp);T('POWER RELAY',0,.62,.01,0,1.8,'#9fd8e6',pp);
 const swData=[['gold','#ffa51f',-.6,'A'],['red','#ff3b4e',-.2,'B'],['blue','#2d8cff',.2,'C']],swEls=[];
 swData.forEach(([n,c,x,l])=>{const s=B(x,0,.08,.26,.5,.14,M('#e0293c'),0,pp);s.dataset.color=n;K(s,()=>powerClick(s));swEls.push(s);S(x,.36,.1,.05,E(c,2),pp);T(l,x,-.42,.02,0,1.2,'#9fd8e6',pp)});
-const sx=K(B(.6,0,.08,.26,.5,.14,M('#6a7a80'),0,pp),()=>{if(st.stage!=='power')return;toast('WARNING: relay fault triggered');snd('error');cont(6)});T('X',.6,-.42,.02,0,1.2,'#9fd8e6',pp);
+const sx=K(B(.6,0,.08,.26,.5,.14,M('#6a7a80'),0,pp),()=>{if(st.stage!=='power')return;toast('WARNING: relay fault triggered');snd('error');cont(3)});T('X',.6,-.42,.02,0,1.2,'#9fd8e6',pp);
 B(-6.7,.45,.45,.55,.9,2.2,M('#1d2a30'));B(-6.7,.93,.45,.6,.06,2.3,M('#3a4d56'));
 ['#2d8cff','#ffa51f','#ff3b4e','#39ff88','#b36bff','#ff8bc0'].forEach((c,i)=>{const z=1.3-i*.32;C(-6.7,1.12,z,.05,.32,'color:#cfe;opacity:.35;transparent:true;metalness:.5');C(-6.7,1.04,z,.042,.16,E(c,1.2))});
 T('SAMPLE RACK  (LEFT → RIGHT)',-6.93,1.55,.45,90,1.8,'#a8d0dc');
@@ -177,7 +183,7 @@ flavor(B(6.62,1.1,-4.6,.7,2.2,1.2,M('#10181b')),'Server rack. Fans spinning, dri
 for(let i=0;i<10;i++){const l=S(6.26,.5+i*.17,-4.9+(i%2)*.4,.025,E(['#3ddc8a','#ffa51f','#27d3ff'][i%3],1.5));pulse(l,'material.emissiveIntensity',.1,400+Math.random()*900)}
 B(6.3,.45,5.6,.5,.9,.5,M('#1d2a30'));C(6.3,.96,5.6,.1,.12,M('#2a3c45'));
 const vialV=C(6.3,1.16,5.6,.09,.3,E('#ffa51f',1.8));L(6.3,1.5,5.6,'#ffa51f',.5,3);T('SUBJECT 07',6.3,1.6,5.6,0,1.2,'#ffa51f');
-const vialHit=K(B(6.3,1.15,5.6,.4,.5,.4,'opacity:0;transparent:true'),()=>{if(st.marked)return;st.marked=true;snd('glitch');toast('Subject 07 recognised...');vialV.setAttribute('material','transparent',true);vialV.setAttribute('animation__f','property:material.opacity;from:1;to:0;dur:900')});
+const vialHit=K(B(6.3,1.15,5.6,.4,.5,.4,'opacity:0;transparent:true'),()=>toast('A sealed vial labelled SUBJECT 07. The tag says the cells inside belong to "A. VOSS".',6000));
 /* safety station */
 B(5.5,.9,6.8,.5,.6,.2,M('#dfe8ea'));B(5.5,.9,6.69,.3,.07,.02,E('#ff3b4e',.8));B(5.5,.9,6.69,.07,.3,.02,E('#ff3b4e',.8));C(5.5,.45,6.7,.14,.5,M('#8a9aa0'));T('SAFETY STATION',5.5,1.4,6.7,180,1.6,'#a8d0dc');
 
@@ -189,8 +195,9 @@ els.forEach(([s,r,c,k])=>{const x=ox+(c-1)*cs,y=oy-(r-1)*cs;B(x,y,-6.91,cs*.9,cs
 [['alkali','ALKALI METAL  ->  restores RED strands'],['halogen','HALOGEN  ->  restores YELLOW strands'],['noble','NOBLE GAS  ->  restores BLUE strands']].forEach(([k,t],i)=>{const y=3.05-i*.26;B(-5.6,y,-6.91,.18,.18,.03,E(cc[k],.8));T(t,-3.5,y,-6.89,0,3.3,'#cfeeff').setAttribute('align','left')});
 /* sequencer */
 B(-2.5,.5,-5.8,2.2,1,1.4,M('#1d2a30'));B(-2.5,1.01,-5.8,2.3,.04,1.5,M('#2f424b'));B(-2.5,1.45,-6.15,1.8,.85,.6,M('#26363e'));T('GENE SEQUENCER',-2.5,2.0,-5.83,0,2.2,'#9fd8e6');
-const slots={};[['A',-3,'He','fragB'],['B',-2.5,'F','fragC'],['C',-2,'Li','fragA']].forEach(([id,x,n,ok])=>{const s=K(B(x,1.07,-5.55,.38,.1,.38,M('#3a4d56')),()=>slotClick(id,s,ok));slots[id]=null;T(n,x,1.5,-5.84,0,1.4,'#ffd25a')});
-const fragsG=G(0,0,0,0,false);const frags=[['fragA','#ff3b4e',-3.1],['fragB','#2d8cff',-2.5],['fragC','#ffa51f',-1.9]].map(([id,c,x])=>{const f=K(S(x,1.17,-5.15,.13,E(c,1.3),fragsG),()=>fragClick(f,id));return f});
+const slots={};[['A',-3.05,'He','fragB'],['B',-2.5,'F','fragC'],['C',-1.95,'Li','fragA']].forEach(([id,x,n,ok])=>{const s=B(x,1.17,-5.5,.44,.32,.44,M('#3a4d56','emissive:#27d3ff;emissiveIntensity:.6'));K(B(x,1.3,-5.5,.64,.62,.64,'opacity:0;transparent:true'),()=>slotClick(id,s,ok));slots[id]=null;T(n,x,1.72,-5.5,0,3,'#ffe27a');mk('a-ring',{position:`${x} 1.02 -5.5`,rotation:'-90 0 0','radius-inner':.3,'radius-outer':.34,material:E('#27d3ff',1.5)})});
+B(-4.6,.5,-5.35,1.6,1,.8,M('#1d2a30'));B(-4.6,1.01,-5.35,1.7,.04,.9,M('#2f424b'));T('GENE FRAGMENTS',-4.6,1.8,-5.35,0,2.4,'#ffe27a');
+const fragsG=G(0,0,0,0,false);const frags=[['fragA','#ff3b4e',-5.1],['fragB','#2d8cff',-4.6],['fragC','#ffa51f',-4.1]].map(([id,c,x])=>{const f=K(S(x,1.2,-5.35,.15,E(c,1.6),fragsG),()=>fragClick(f,id));return f});
 /* sample cart */
 B(-2,.45,-3,.7,.9,.5,M('#1d2a30'));B(-2,.92,-3,.75,.05,.55,M('#3a4d56'));
 const sample=K(S(-2,1.2,-3,.16,E('#2ee58a',1.8)),sampleClick);sample.setAttribute('animation','property:position;dir:alternate;loop:true;to:-2 1.28 -3;dur:1600;easing:easeInOutSine');
@@ -225,7 +232,7 @@ clip(6.95,2.2,-3.3,-90,'MAINTENANCE NOTE',"Purge cycle rewired during the noble-
 clip(6.95,2.1,2.6,-90,'TECHNICIAN LOG',"If you're reading this, comms are still down and you're on your own.\n\nVoss left something growing on a slide under the microscope on this bench. Look closely — it's not just noise.");
 
 /* ---------- dust ---------- */
-for(let i=0;i<40;i++){const x=(Math.random()-.5)*12,y=.4+Math.random()*4,z=(Math.random()-.5)*12;S(x,y,z,.013,'color:#fff;emissive:#fff;opacity:.4;transparent:true').setAttribute('animation',`property:position;to:${x+.6} ${y+.7} ${z+.4};dur:${6000+Math.random()*6000};dir:alternate;loop:true;easing:easeInOutSine`)}
+for(let i=0;i<14;i++){const x=(Math.random()-.5)*12,y=.4+Math.random()*4,z=(Math.random()-.5)*12;S(x,y,z,.013,'color:#fff;emissive:#fff;opacity:.4;transparent:true').setAttribute('animation',`property:position;to:${x+.6} ${y+.7} ${z+.4};dur:${6000+Math.random()*6000};dir:alternate;loop:true;easing:easeInOutSine`)}
 const shadow=B(6,1.2,3,.6,1.8,.2,'color:#000');shadow.setAttribute('visible',false);S(-.1,.5,.11,.03,E('#ff2b3d',3),shadow);S(.1,.5,.11,.03,E('#ff2b3d',3),shadow);
 
 /* ---------- modal system ---------- */
@@ -247,8 +254,8 @@ const setStage=(a,b)=>{$('#stageName').textContent=a;$('#stageHint').textContent
 const flash=(c,d)=>{const f=$('#flash');f.style.background=c||'#ff3b4e';f.style.transition='none';f.style.opacity='.4';requestAnimationFrame(()=>{f.style.transition=`opacity ${d||250}ms`;f.style.opacity='0'})};
 function cont(d){if(st.over)return;st.cont=Math.max(0,Math.min(100,st.cont+d));const p=st.cont,f=$('#meterFill'),col=p<40?'#2ee58a':p<75?'#ffa51f':'#ff3b4e';f.style.width=p+'%';f.style.background=col;f.style.color=col;$('#meterPct').textContent=Math.round(p)+'%';blob.setAttribute('material','color',col);blob.setAttribute('material','emissive',col);podLight.setAttribute('light','color',col);if(d>0)flash();if(p>=100)end('#failOverlay','alarm',()=>{setPower(false)})}
 function end(id,s,pre){st.over=true;st.stage='ended';snd(s);pre&&pre();setTimeout(()=>$(id).classList.add('active'),s==='success'?1800:200)}
-setInterval(()=>{if(!st.paused&&!st.over&&st.stage!=='intro')cont(1)},10000);
-const wrong=(m,d,s)=>{toast(m);snd('error');cont(d)};
+setInterval(()=>{if(!st.paused&&!st.over&&st.stage!=='intro')cont(1)},30000);
+const wrong=(m,d,s)=>{toast(m);snd('error');cont(Math.ceil(d/2))};
 
 $('#enterBtn').onclick=()=>{AC.resume();$('#introOverlay').classList.remove('active');$('#startHint').style.display='block';setTimeout(()=>$('#startHint').style.display='none',7000);setStage('POWER FAILURE','Restore the relay to bring systems back online.');setObj('Three switches are color-tagged (dot above each). Find that color order on the sample rack (west wall), then press A/B/C in that order. Avoid switch X.');st.stage='power'};
 
@@ -257,25 +264,25 @@ function powerClick(s){if(st.stage!=='power')return;const c=s.dataset.color;st.p
 function startDna(){st.stage='dna';setStage('SAMPLE UNSTABLE','Retrieve the sample, then sequence the gene fragments.');setObj('Click the unstable sample on the cart to load it. Each slot lists an element — the periodic table\'s colors tell you which fragment matches.')}
 function sampleClick(){if(st.stage!=='dna'||st.armed)return;st.armed=true;sample.removeAttribute('animation');sample.setAttribute('animation__m','property:position;to:-2.5 1.95 -6.15;dur:700;easing:easeInOutQuad');fragsG.setAttribute('visible',true);toast('Sample loaded into sequencer.')}
 function fragClick(f,id){if(st.stage!=='dna'||!st.armed)return;frags.forEach(x=>x.setAttribute('scale','1 1 1'));st.sel=[f,id];f.setAttribute('scale','1.4 1.4 1.4');toast('Fragment selected — now click the matching slot.')}
-function slotClick(id,s,ok){if(st.stage!=='dna'||!st.sel)return;if(st.dna[id]){toast('Slot already filled.');return}const[f,fid]=st.sel;if(fid===ok){s.setAttribute('material','color','#1f9d5c');s.setAttribute('material','emissive','#1f9d5c');f.setAttribute('visible',false);st.dna[id]=1;toast('Fragment locked in.');snd('success')}else{s.setAttribute('animation__w','property:material.color;type:color;from:#e0293c;to:#3a4d56;dur:500');cont(8);snd('error');toast('Wrong strand — sequence rejected.')}f.setAttribute('scale','1 1 1');st.sel=null;if(Object.values(st.dna).every(Boolean)){toast('Sequence complete.');setTimeout(jumpscare,800)}}
-function jumpscare(){st.stage='scare';st.paused=true;setStage('!! ANOMALY !!','...');setObj('');setPower(false);snd('bang');vent.setAttribute('animation__o','property:rotation;to:0 0 70;dur:400;easing:easeOutCubic');shadow.setAttribute('visible',true);shadow.setAttribute('position','6 1.2 3');shadow.setAttribute('animation__d','property:position;to:-6 1.2 -2;dur:500;easing:easeInQuad');setTimeout(()=>shadow.setAttribute('visible',false),550);let n=0;const fl=setInterval(()=>{const on=n%2===0;red.forEach(r=>r.setAttribute('light','intensity',on?1.8:.1));flash(on?'#05090b':'#ff3b4e',150);if(++n>8){clearInterval(fl);red.forEach(r=>r.setAttribute('light','intensity',0));setPower(true);st.paused=false;cont(15);startChem()}},180)}
+function slotClick(id,s,ok){if(st.stage!=='dna'||!st.sel)return;if(st.dna[id]){toast('Slot already filled.');return}const[f,fid]=st.sel;if(fid===ok){s.setAttribute('material','color','#1f9d5c');s.setAttribute('material','emissive','#1f9d5c');f.setAttribute('visible',false);st.dna[id]=1;toast('Fragment locked in.');snd('success')}else{s.setAttribute('animation__w','property:material.color;type:color;from:#e0293c;to:#3a4d56;dur:500');cont(4);snd('error');toast('Wrong strand — sequence rejected.')}f.setAttribute('scale','1 1 1');st.sel=null;if(Object.values(st.dna).every(Boolean)){toast('Sequence complete.');setTimeout(jumpscare,800)}}
+function jumpscare(){st.stage='scare';st.paused=true;setStage('!! ANOMALY !!','...');setObj('');setPower(false);snd('bang');vent.setAttribute('animation__o','property:rotation;to:0 0 70;dur:400;easing:easeOutCubic');shadow.setAttribute('visible',true);shadow.setAttribute('position','6 1.2 3');shadow.setAttribute('animation__d','property:position;to:-6 1.2 -2;dur:500;easing:easeInQuad');setTimeout(()=>shadow.setAttribute('visible',false),550);let n=0;const fl=setInterval(()=>{const on=n%2===0;red.forEach(r=>r.setAttribute('light','intensity',on?1.8:.1));flash(on?'#05090b':'#ff3b4e',150);if(++n>8){clearInterval(fl);red.forEach(r=>r.setAttribute('light','intensity',0));setPower(true);st.paused=false;cont(8);startChem()}},180)}
 function startChem(){st.stage='chem';chem.setAttribute('visible',true);setStage('MIXTURE UNSTABLE','Match the readout to the correct compound.');setObj('The readout names a chart color, not a word. Match it to a category using the periodic table legend, then pick that bottle.')}
-function bottleClick(b,n,x){if(st.stage!=='chem')return;b.setAttribute('animation__pour','property:position;to:4.5 1.45 -5.5;dur:400;easing:easeInQuad');setTimeout(()=>{if(n==='Na'){mixer.setAttribute('material','color','#1f9d5c');mixer.setAttribute('material','emissive','#1f9d5c');snd('success');toast('Compound stabilized.');cont(-15);setTimeout(startVent,700)}else{mixer.setAttribute('animation__f','property:material.color;type:color;from:#e0293c;to:#3a4d56;dur:500');snd('error');toast('Wrong compound — reaction unstable.');cont(10)}b.setAttribute('animation__reset',`property:position;to:${x} 1.25 -6.1;dur:1`)},420)}
+function bottleClick(b,n,x){if(st.stage!=='chem')return;b.setAttribute('animation__pour','property:position;to:4.5 1.45 -5.5;dur:400;easing:easeInQuad');setTimeout(()=>{if(n==='Na'){mixer.setAttribute('material','color','#1f9d5c');mixer.setAttribute('material','emissive','#1f9d5c');snd('success');toast('Compound stabilized.');cont(-15);setTimeout(startVent,700)}else{mixer.setAttribute('animation__f','property:material.color;type:color;from:#e0293c;to:#3a4d56;dur:500');snd('error');toast('Wrong compound — reaction unstable.');cont(5)}b.setAttribute('animation__reset',`property:position;to:${x} 1.25 -6.1;dur:1`)},420)}
 function startVent(){st.stage='vent';ventA.setAttribute('visible',true);setStage('VENT UNSEALED','Seal the vent before fog fills the room.');setObj('A maintenance note on the east wall explains the ordering rule — the periodic table shows which element comes first.')}
 const vs=['He','Ne','Ar'];
 function ventClick(n,b){if(st.stage!=='vent')return;st.vent.push(n);b.setAttribute('animation__pr','property:scale;from:1.3 1.3 1.3;to:1 1 1;dur:250');if(n!==vs[st.vent.length-1]){wrong('Incorrect sequence — vent leaking.',8);st.vent=[];return}snd('click');if(st.vent.length===3){snd('success');toast('Vent sealed.');cont(-10);vent.setAttribute('animation__s','property:rotation;to:0 0 0;dur:500');setTimeout(startFinal,700)}}
 function startFinal(){st.stage='final';fin.setAttribute('visible',true);guide.setAttribute('visible',true);setStage('OVERRIDE AVAILABLE','Reach the containment door and complete the override.');setObj('Four sub-systems: hand scan, stabiliser, lasers, terminal PIN. The incident board says where the answers are.');if(st.marked)setTimeout(()=>{st.paused=true;toast('"Subject 07 recognised."');end('#secretOverlay','glitch');},1200)}
-function done(n,b){st.fin[n]=1;b.setAttribute('material','color','#1f9d5c');b.setAttribute('material','emissive','#1f9d5c');toast(n.toUpperCase()+' confirmed.');snd('success');if(Object.values(st.fin).every(Boolean)){const d=$('#world').children;setTimeout(()=>end('#successOverlay','success'),500)}}
+function done(n,b){st.fin[n]=1;b.setAttribute('material','color','#1f9d5c');b.setAttribute('material','emissive','#1f9d5c');toast(n.toUpperCase()+' confirmed.');snd('success');if(Object.values(st.fin).every(Boolean)){const d=$('#world').children;setTimeout(()=>window.HALL?window.HALL.start():end('#successOverlay','success'),500)}}
 function finalOpen(n,b){if(st.stage!=='final'||st.marked||st.fin[n])return;({scan:()=>scanUI(b),stabiliser:()=>stabUI(b),lasers:()=>laserUI(b),code:()=>pinUI(b)})[n]()}
-function scanUI(b){const T=[7,5,3,1,9];let p=[];openM('HAND SCANNER','Touch the panel in the sequence from the security memo.',c=>{const g=document.createElement('div');g.className='grid';for(let i=1;i<=9;i++){const k=btn(i,()=>{p.push(i);if(T[p.length-1]!==i){k.classList.add('wrong');snd('error');cont(5);setTimeout(()=>{g.querySelectorAll('button').forEach(x=>x.className='');p=[]},400);return}k.classList.add('done');if(p.length===5){snd('success');setTimeout(()=>{closeM();done('scan',b)},400)}},'',g)}c.appendChild(g)})}
-function stabUI(b){let v=0;openM('STABILISER PRESSURE','Set the pressure to the value from the maintenance note.',c=>{const d=document.createElement('div');d.className='disp';d.textContent=0;c.appendChild(d);const r=document.createElement('div');r.className='row';btn('-1',()=>{v=(v+9)%10;d.textContent=v},'',r);btn('+1',()=>{v=(v+1)%10;d.textContent=v},'',r);btn('SET',()=>{if(v===6){snd('success');closeM();done('stabiliser',b)}else{snd('error');cont(5);d.classList.add('wrong')}},'',r);c.appendChild(r)})}
-function laserUI(b){const T=[90,270,180],s=[0,0,0];openM('LASER ALIGNMENT','Click a mirror to rotate it 90°. Match the optics note, then confirm.',c=>{const r=document.createElement('div');r.className='row';s.forEach((_,i)=>{const w=document.createElement('div'),m=btn('↑',()=>{s[i]=(s[i]+90)%360;m.style.transform=`rotate(${s[i]}deg)`;l.textContent=s[i]+'°'},'mir',w),l=document.createElement('div');l.className='sub';l.textContent='0°';w.appendChild(l);r.appendChild(w)});c.appendChild(r);const r2=document.createElement('div');r2.className='row';btn('CONFIRM',()=>{if(s.every((v,i)=>v===T[i])){snd('success');closeM();done('lasers',b)}else{snd('error');cont(5);toast('Beam misaligned.')}},'',r2);c.appendChild(r2)})}
+function scanUI(b){const T=[7,5,3,1,9];let p=[];openM('HAND SCANNER','Touch the panel in the sequence from the security memo.',c=>{const g=document.createElement('div');g.className='grid';for(let i=1;i<=9;i++){const k=btn(i,()=>{p.push(i);if(T[p.length-1]!==i){k.classList.add('wrong');snd('error');cont(2);setTimeout(()=>{g.querySelectorAll('button').forEach(x=>x.className='');p=[]},400);return}k.classList.add('done');if(p.length===5){snd('success');setTimeout(()=>{closeM();done('scan',b)},400)}},'',g)}c.appendChild(g)})}
+function stabUI(b){let v=0;openM('STABILISER PRESSURE','Set the pressure to the value from the maintenance note.',c=>{const d=document.createElement('div');d.className='disp';d.textContent=0;c.appendChild(d);const r=document.createElement('div');r.className='row';btn('-1',()=>{v=(v+9)%10;d.textContent=v},'',r);btn('+1',()=>{v=(v+1)%10;d.textContent=v},'',r);btn('SET',()=>{if(v===6){snd('success');closeM();done('stabiliser',b)}else{snd('error');cont(2);d.classList.add('wrong')}},'',r);c.appendChild(r)})}
+function laserUI(b){const T=[90,270,180],s=[0,0,0];openM('LASER ALIGNMENT','Click a mirror to rotate it 90°. Match the optics note, then confirm.',c=>{const r=document.createElement('div');r.className='row';s.forEach((_,i)=>{const w=document.createElement('div'),m=btn('↑',()=>{s[i]=(s[i]+90)%360;m.style.transform=`rotate(${s[i]}deg)`;l.textContent=s[i]+'°'},'mir',w),l=document.createElement('div');l.className='sub';l.textContent='0°';w.appendChild(l);r.appendChild(w)});c.appendChild(r);const r2=document.createElement('div');r2.className='row';btn('CONFIRM',()=>{if(s.every((v,i)=>v===T[i])){snd('success');closeM();done('lasers',b)}else{snd('error');cont(2);toast('Beam misaligned.')}},'',r2);c.appendChild(r2)})}
 function pinUI(b){let p='';openM('OVERRIDE TERMINAL','ENTER 4-DIGIT ACCESS CODE',c=>{const d=document.createElement('div');d.className='disp';d.textContent='_ _ _ _';c.appendChild(d);const up=w=>{d.textContent=p.padEnd(4,'_').split('').join(' ');d.classList.toggle('wrong',!!w)};const g=document.createElement('div');g.className='grid';[1,2,3,4,5,6,7,8,9,'⌫',0,'↵'].forEach(k=>btn(k,()=>{if(k==='⌫')p=p.slice(0,-1);else if(k==='↵'){if(p==='4172'){closeM();toast('Access granted.');done('code',b)}else{up(1);snd('error');setTimeout(()=>{p='';up()},500)}return}else if(p.length<4)p+=k;up()},'',g));c.appendChild(g)})}
-window.LAB={cont,st,toast,snd,flash,setPower};
+window.LAB={cont,st,toast,snd,flash,setPower,end,openM,closeM,btn,setStage,setObj};
 }
 if(window.AFRAME){
- AFRAME.registerComponent('labcollide',{tick(){const p=this.el.object3D.position,r=this.el.parentNode.object3D.position;p.y=1.6;const bl=(x,z)=>Math.abs(x)>6.5||Math.abs(z)>6.5||BX.some(b=>x>b[0]-.3&&x<b[1]+.3&&z>b[2]-.3&&z<b[3]+.3);if(!this.l){this.l={x:p.x,z:p.z};return}if(bl(p.x+r.x,p.z+r.z)){if(!bl(this.l.x+r.x,p.z+r.z))p.x=this.l.x;else if(!bl(p.x+r.x,this.l.z+r.z))p.z=this.l.z;else{p.x=this.l.x;p.z=this.l.z}}this.l.x=p.x;this.l.z=p.z}});
- const BX=[[-1.5,1.5,-7,-4.3],[-3.7,-1.3,-6.7,-5.0],[-2.4,-1.6,-3.3,-2.7],[-1.1,1.1,-.1,1.1],[-7,-6.2,-.6,1.5],[-7,-6.2,-6.3,-5.2],[3.1,5.9,-6.6,-5.2],[6.0,7,.3,2.7],[6.1,7,-5.3,-3.9],[6.0,6.6,5.3,5.9],[5.2,5.8,6.3,7],[-7,-5.9,4.6,6.6],[-5.9,-5.2,5.0,5.8]];
+ AFRAME.registerComponent('labcollide',{tick(){const p=this.el.object3D.position,r=this.el.parentNode.object3D.position;p.y=1.6;const bl=(x,z)=>{if(window.HO&&z>6.3)return Math.abs(x)>2.15||z>(window.HE||34.4)||(window.HB||[]).some(b=>x>b[0]-.3&&x<b[1]+.3&&z>b[2]-.3&&z<b[3]+.3);return Math.abs(x)>6.5||Math.abs(z)>6.5||BX.some(b=>x>b[0]-.3&&x<b[1]+.3&&z>b[2]-.3&&z<b[3]+.3)};if(!this.l){this.l={x:p.x,z:p.z};return}if(bl(p.x+r.x,p.z+r.z)){if(!bl(this.l.x+r.x,p.z+r.z))p.x=this.l.x;else if(!bl(p.x+r.x,this.l.z+r.z))p.z=this.l.z;else{p.x=this.l.x;p.z=this.l.z}}this.l.x=p.x;this.l.z=p.z}});
+ const BX=[[-1.5,1.5,-7,-4.3],[-5.5,-1.3,-6.7,-5.0],[-2.4,-1.6,-3.3,-2.7],[-1.1,1.1,-.1,1.1],[-7,-6.2,-.6,1.5],[-7,-6.2,-6.3,-5.2],[3.1,5.9,-6.6,-5.2],[6.0,7,.3,2.7],[6.1,7,-5.3,-3.9],[6.0,6.6,5.3,5.9],[5.2,5.8,6.3,7],[-7,-5.9,4.6,6.6],[-5.9,-5.2,5.0,5.8]];
  const sc=$('#scene');sc.hasLoaded?boot():sc.addEventListener('loaded',boot);
 }else document.body.insertAdjacentHTML('beforeend','<div class="overlay active"><h1>3D LIBRARY FAILED TO LOAD</h1><p>A-Frame is loaded from cdn.jsdelivr.net — check your ad-blocker, VPN or network filter.</p></div>');
 })();
@@ -306,11 +313,11 @@ new MutationObserver(()=>{const s=$('#stageName').textContent;if(s==='POWER FAIL
  if(s==='!! ANOMALY !!'){bigScare();setTimeout(()=>{const a=$('#alive');a.style.display='flex';setTimeout(()=>a.style.display='none',3600);const b=document.querySelector('#world a-sphere[animation]');if(b)b.setAttribute('visible',false)},1050)}}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
 const endLine={'#failOverlay':'Containment lost.','#successOverlay':'Override accepted. The door is open.','#secretOverlay':'Welcome home, Subject 07.'};
 Object.keys(endLine).forEach(id=>{const o=$(id);new MutationObserver(()=>{if(!o.classList.contains('active')||o.dataset.done)return;o.dataset.done=1;
- if(id==='#successOverlay'){const t=Math.round((Date.now()-start)/1000),r=t<300?'S':t<480?'A':t<720?'B':'C',d=document.createElement('div');d.id='rank';d.textContent=`TIME ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}  ·  RANK ${r}`;o.insertBefore(d,o.querySelector('button'))}}).observe(o,{attributes:true,attributeFilter:['class']})});
+ if(id==='#successOverlay'){const t=Math.round((Date.now()-start)/1000),r=t<600?'S':t<960?'A':t<1500?'B':'C',d=document.createElement('div');d.id='rank';d.textContent=`TIME ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}  ·  RANK ${r}`;o.insertBefore(d,o.querySelector('button'));if(window.CHIPS&&window.CHIPS()===4)o.querySelector('p').innerHTML+="<br><br><em>You also found all four of Voss's logs. He built Subject 07 from his own DNA, hoping to save his sick daughter, Mia. Someone should tell her the truth.</em>"}}).observe(o,{attributes:true,attributeFilter:['class']})});
 /* contamination: fog thickens, warnings appear */
-const fired={};let lastB=-1;
+const fired={};let lastB=-1,wasD=0;
 setInterval(()=>{const p=parseInt($('#meterPct').textContent)||0,b=Math.floor(p/5);
- if(b!==lastB){lastB=b;sc.setAttribute('fog',`type:exponential;color:${p<50?'#081216':p<75?'#0b1a10':'#240a0e'};density:${(.014+p*.0003).toFixed(4)}`)}
+ if(window.DARK){wasD=1}else if(b!==lastB||wasD){wasD=0;lastB=b;sc.setAttribute('fog',`type:exponential;color:${p<50?'#081216':p<75?'#0b1a10':'#240a0e'};density:${(.014+p*.0003).toFixed(4)}`)}
  [[50,'Contamination is at 50%. Work faster.'],[75,'Danger! Contamination is at 75%.'],[90,'Almost out of time! 90% contaminated.']].forEach(([t,m])=>{if(p>=t&&!fired[t]){fired[t]=1;say(m,5000)}})},400);
 /* quiet background hum */
 const dg=A.createGain(),lp=A.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;dg.gain.value=.02;[55,55.6].forEach(f=>{const o=A.createOscillator();o.type='sine';o.frequency.value=f;o.connect(lp);o.start()});lp.connect(dg);dg.connect(A.destination);
@@ -346,25 +353,19 @@ mk('a-cone',{rotation:'180 0 0','radius-bottom':.22,'radius-top':0,height:.45,ma
 mk('a-torus',{position:'0 -.4 0',rotation:'90 0 0',radius:.3,'radius-tubular':.02,material:E('#ffd25a',2)},mkr);
 const ml=mk('a-text',{align:'center',width:3.6,color:'#ffe9a0',position:'0 .6 0','look-at':'[camera]'},mkr);
 const put=(x,y,z,t)=>{mkr.removeAttribute('animation');mkr.setAttribute('position',`${x} ${y} ${z}`);mkr.setAttribute('animation',`property:position;from:${x} ${y} ${z};to:${x} ${y+.25} ${z};dir:alternate;loop:true;dur:700;easing:easeInOutSine`);ml.setAttribute('value',t);mkr.setAttribute('visible',true)};
-const MK={'POWER FAILURE':[-6.2,2.7,-2,'POWER SWITCHES'],'SAMPLE UNSTABLE':[-2,2.4,-3,'CLICK THE SAMPLE'],'MIXTURE UNSTABLE':[4.5,2.4,-6.1,'PICK A BOTTLE'],'VENT UNSEALED':[6.2,2.8,-2,'PRESS THE 3 BUTTONS'],'OVERRIDE AVAILABLE':[0,3.3,6.0,'FINISH THE 4 PANELS']};
-const OB={'POWER FAILURE':'STEP 1 of 5 — Turn on the power. Find the sample rack on the LEFT wall and read the vial colours from left to right. Then press the switches with the same coloured dots, in that order. Do not press X.',
-'SAMPLE UNSTABLE':'STEP 2 of 5 — Click the glowing green sample (follow the yellow arrow). Then click a coloured ball and click the slot it belongs in. Each slot shows an element. The colour chart on the back wall tells you which colour matches.',
-'MIXTURE UNSTABLE':'STEP 3 of 5 — The sample woke up and escaped into the vents! To calm the lab, look at the screen on the back wall: it says PINK. On the colour chart, pink means ALKALI METAL. Click the bottle that is an alkali metal.',
-'VENT UNSEALED':'STEP 4 of 5 — Read the note on the RIGHT wall near the vent. Press the three buttons from the lightest element to the heaviest.',
-'OVERRIDE AVAILABLE':'STEP 5 of 5 — Go to the big door at the front. Finish all 4 panels: HAND SCAN, STABILISER, LASERS and TERMINAL. Notes near the door and on the walls tell you what to enter. Stuck? Click the incident board on the left wall.'};
+const MK={'POWER FAILURE':[-6.2,2.7,-2,'POWER SWITCHES'],'SAMPLE UNSTABLE':[-2,2.4,-3,'CLICK THE SAMPLE'],'MIXTURE UNSTABLE':[4.5,2.4,-6.1,'PICK A BOTTLE'],'VENT UNSEALED':[6.2,2.8,-2,'PRESS THE 3 BUTTONS'],'OVERRIDE AVAILABLE':[0,3.3,6.0,'FINISH THE 4 PANELS'],'HALLWAY POWER':[-2.2,3.1,11.5,'FUSE BOX'],'GATE LOCK':[2.2,2.8,26.2,'GATE KEYPAD'],'FINAL EXIT':[1.8,2.8,34.5,'EXIT KEYPAD']};
+const OB={'POWER FAILURE':'STEP 1 of 8 — Turn on the power. Find the sample rack on the LEFT wall and read the vial colours from left to right. Then press the switches with the same coloured dots, in that order. Do not press X.',
+'SAMPLE UNSTABLE':'STEP 2 of 8 — Click the glowing green sample (follow the yellow arrow). Then click a coloured ball on the small table on the left, and click the glowing slot on the machine where it belongs. Each slot shows an element. The colour chart on the back wall tells you which colour matches.',
+'MIXTURE UNSTABLE':'STEP 3 of 8 — The sample woke up and escaped into the vents! To calm the lab, look at the screen on the back wall: it says PINK. On the colour chart, pink means ALKALI METAL. Click the bottle that is an alkali metal.',
+'VENT UNSEALED':'STEP 4 of 8 — Read the note on the RIGHT wall near the vent. Press the three buttons from the lightest element to the heaviest.',
+'OVERRIDE AVAILABLE':'STEP 5 of 8 — Go to the big door at the front. Finish all 4 panels: HAND SCAN, STABILISER, LASERS and TERMINAL. Notes near the door and on the walls tell you what to enter. Stuck? Click the incident board on the left wall.','HALLWAY POWER':'STEP 6 of 8 — The hallway is dark. Go to the FUSE BOX on the left wall. Press the fuses in the same order as the lamps, top to bottom.','GATE LOCK':'STEP 7 of 8 — Read the BREACH LOG on the left wall. Enter its 4 digits on the gate keypad (right wall).','FINAL EXIT':'STEP 8 of 8 — Last lock! Enter the atomic numbers of the 3 GENE SEQUENCER elements, left to right. The chart on the right wall helps.'};
 /* checklist */
-const steps=[['POWER FAILURE','Turn on the power'],['SAMPLE UNSTABLE','Fix the sample'],['MIXTURE UNSTABLE','Pick the right bottle'],['VENT UNSEALED','Seal the vent'],['OVERRIDE AVAILABLE','Open the door']];
-const tl=document.createElement('div');tl.className='box';tl.style.cssText='position:fixed;top:132px;right:18px;z-index:5;pointer-events:none;font-size:12px;line-height:1.8;min-width:200px';document.body.appendChild(tl);
+const steps=[['POWER FAILURE','Turn on the power'],['SAMPLE UNSTABLE','Fix the sample'],['MIXTURE UNSTABLE','Pick the right bottle'],['VENT UNSEALED','Seal the vent'],['OVERRIDE AVAILABLE','Open the door'],['HALLWAY POWER','Light the hallway'],['GATE LOCK','Open the gate'],['FINAL EXIT','Escape!']];
+const tl=document.createElement('div');tl.className='box';tl.style.cssText='position:fixed;top:18px;right:18px;z-index:5;pointer-events:none;font-size:12px;line-height:1.8;min-width:200px';document.body.appendChild(tl);
 const draw=c=>{const k=steps.findIndex(x=>x[0]===c);tl.innerHTML='<div style="color:#7fb6c6;letter-spacing:2px;font-size:10px">TASKS</div>'+steps.map((x,i)=>`<div style="color:${i<k?'#2ee58a':i===k?'#ffd25a':'#587480'}">${i<k?'✔':i===k?'▶':'○'} ${x[1]}</div>`).join('')};draw('');
 new MutationObserver(()=>{let s=$('#stageName').textContent;if(s==='!! ANOMALY !!'){mkr.setAttribute('visible',false);draw('MIXTURE UNSTABLE');return}draw(s);if(MK[s])put(...MK[s]);setTimeout(()=>{if(OB[s])$('#objectiveBox').textContent=OB[s]},450)}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
-new MutationObserver(()=>{if(/Sample loaded/.test($('#toast').textContent))put(-2.5,2.7,-5.2,'PUT THE BALLS IN THE SLOTS')}).observe($('#toast'),{childList:true,characterData:true,subtree:true});
-/* live status screen on the west wall */
-const sc=document.createElement('canvas');sc.id='statusC';sc.width=512;sc.height=256;sc.style.display='none';document.body.appendChild(sc);const g=sc.getContext('2d');
-const scr=mk('a-plane',{position:'-6.93 2.8 -5.6',rotation:'0 90 0',width:2,height:1,material:'shader:flat;src:#statusC'});
-setInterval(()=>{const p=parseInt($('#meterPct').textContent)||0,col=p<40?'#2ee58a':p<75?'#ffa51f':'#ff3b4e';g.fillStyle='#04100c';g.fillRect(0,0,512,256);g.strokeStyle='#27d3ff';g.lineWidth=6;g.strokeRect(3,3,506,250);g.fillStyle='#27d3ff';g.font='bold 30px monospace';g.fillText('LAB 07 — LIVE STATUS',24,52);g.fillStyle='#d8f3fa';g.font='26px monospace';g.fillText('CONTAMINATION',24,110);g.fillStyle='#0b1d24';g.fillRect(24,124,464,34);g.fillStyle=col;g.fillRect(24,124,464*p/100,34);g.fillStyle='#fff';g.font='bold 30px monospace';g.fillText(p+'%',24,206);g.fillStyle='#ffd25a';g.font='20px monospace';g.fillText($('#stageName').textContent,130,204);
- const m=scr.getObject3D('mesh');if(m&&m.material.map)m.material.map.needsUpdate=true},1000);
+new MutationObserver(()=>{if(/Sample loaded/.test($('#toast').textContent))put(-3.6,2.7,-5.2,'PICK A BALL, THEN A SLOT')}).observe($('#toast'),{childList:true,characterData:true,subtree:true});
 /* extra props */
-[[-3.2,6.3],[3.1,6.3],[-6.3,-3.2]].forEach(([x,z])=>{mk('a-cylinder',{position:`${x} .2 ${z}`,radius:.2,height:.4,material:M('#2a3c45')});for(let i=0;i<7;i++){const a=i*.9;mk('a-sphere',{position:`${x+Math.cos(a)*.12} ${.55+(i%3)*.12} ${z+Math.sin(a)*.12}`,radius:.14,scale:'.5 1.6 .5',rotation:`${Math.sin(a)*25} 0 ${-Math.cos(a)*25}`,material:M(i%2?'#2e8a52':'#3fae6c')})}});
 mk('a-cylinder',{position:'6.88 1.2 4',radius:.08,height:.45,material:M('#c9303f')});mk('a-cylinder',{position:'6.88 1.5 4',radius:.03,height:.1,material:M('#111')});
 mk('a-text',{value:'NEXONYX BIOTECH',position:'6.93 3.3 -4.6',rotation:'0 -90 0',align:'center',width:3.4,color:'#27d3ff'});
 mk('a-box',{position:'6.95 3.0 -4.6',width:.03,height:.04,depth:2.8,material:E('#27d3ff',1.2)});
@@ -400,31 +401,273 @@ function spark(){const s=sp[Math.random()*2|0];let n=0;const f=setInterval(()=>{
 /* volumetric light shafts (only once power is back) */
 const shafts=[];
 /* storytelling props: scattered papers, tipped chair, dropped tube */
-for(let i=0;i<11;i++)mk('a-plane',{position:`${(Math.random()-.5)*8} .014 ${(Math.random()-.5)*8+1}`,rotation:`-90 0 ${Math.random()*360}`,width:.3,height:.21,material:'color:#e8e4d0;roughness:1;metalness:0'});
-mk('a-box',{position:'-5.2 .28 2.0',rotation:'0 20 90',width:.5,height:.06,depth:.5,material:M('#2a3c45')});mk('a-box',{position:'-5.2 .56 1.76',rotation:'0 20 90',width:.06,height:.6,depth:.5,material:M('#2a3c45')});
-mk('a-cylinder',{position:'-3 .05 4.4',rotation:'0 0 90',radius:.04,height:.3,material:'color:#cfe;opacity:.4;transparent:true'});
 /* ambience */
 setInterval(()=>{if(!live())return;const r=Math.random();if(r<.28){tn(1900,900,.09,.06);setTimeout(()=>tn(2100,1000,.09,.04),110)}else if(r<.4){tn(220,200,1.3,.05,'triangle');tn(331,300,1.1,.03,'triangle')}else if(r<.57)puff();else if(r<.72)spark()},3500);
 /* stage reactions */
 function slime(){[[6,1,.5],[5.1,.7,.35],[4.3,.4,.25],[3.5,.9,.17]].forEach(([x,z,r])=>mk('a-circle',{position:`${x} .02 ${z}`,rotation:'-90 0 0',radius:r,material:E('#39ff88',1.4)+';opacity:.75;transparent:true'}));[0,1].forEach(i=>{const z=i*.4-.2,d=mk('a-sphere',{position:`6.5 1.6 ${z}`,radius:.03,material:E('#39ff88',2)});d.setAttribute('animation',`property:position;from:6.5 1.6 ${z};to:6.5 .03 ${z};dur:900;loop:true;delay:${i*500};easing:easeInQuad`)})}
 new MutationObserver(()=>{const s=$('#stageName').textContent;if(s!=='POWER FAILURE'&&s!=='SYSTEM BOOT')shafts.forEach(x=>x.setAttribute('visible',true));if(s==='!! ANOMALY !!')slime()}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+/* live vitals monitor (east wall) */
+const ec=document.createElement('canvas');ec.id='ecgC';ec.width=512;ec.height=288;ec.style.display='none';document.body.appendChild(ec);const eg=ec.getContext('2d');
+const ecs=mk('a-plane',{position:'6.93 2.9 3.9',rotation:'0 -90 0',width:1.6,height:.9,material:'shader:flat;src:#ecgC'});
+const tr=[];let ph=0,lost=false;
+new MutationObserver(()=>{if($('#stageName').textContent==='!! ANOMALY !!')lost=true}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+setInterval(()=>{const p=parseInt($('#meterPct').textContent)||0,bpm=60+Math.round(p*.8);ph+=bpm/600;const f=ph%1;let y=Math.random()*.02-.01;if(!lost){if(f>.42&&f<.46)y=-.15;else if(f>=.46&&f<.5)y=.9;else if(f>=.5&&f<.54)y=-.35;else if(f>.7&&f<.8)y=.12*Math.sin((f-.7)*31)}tr.push(y);if(tr.length>100)tr.shift();
+ const col=lost?'#ff3b4e':'#3ddc8a';eg.fillStyle='#02100a';eg.fillRect(0,0,512,288);eg.strokeStyle='#0e3a26';eg.lineWidth=1;for(let i=0;i<=512;i+=32){eg.beginPath();eg.moveTo(i,0);eg.lineTo(i,288);eg.stroke()}for(let i=0;i<=288;i+=32){eg.beginPath();eg.moveTo(0,i);eg.lineTo(512,i);eg.stroke()}
+ eg.strokeStyle=col;eg.lineWidth=3;eg.beginPath();tr.forEach((v,i)=>{const X=i*5.12,Y=190-v*110;i?eg.lineTo(X,Y):eg.moveTo(X,Y)});eg.stroke();eg.fillStyle=col;eg.font='bold 24px monospace';eg.fillText(lost?'SUBJECT 07 — SIGNAL LOST':'SUBJECT 07 — VITALS',16,36);eg.font='bold 44px monospace';eg.fillText(lost?'-- BPM':bpm+' BPM',16,262);
+ const m=ecs.getObject3D('mesh');if(m&&m.material.map)m.material.map.needsUpdate=true},100);
+/* data conduit with light pulses running from the server rack to the pod */
+mk('a-box',{position:'3.2 .025 -4.4',width:6.2,height:.04,depth:.14,material:M('#10181b')});mk('a-box',{position:'3.2 .048 -4.4',width:6.2,height:.01,depth:.05,material:E('#27d3ff',1)});
+/* exit door warning beacons */
+[-2.8,2.8].forEach(x=>{const b=mk('a-sphere',{position:`${x} 3.1 6.7`,radius:.12,material:E('#ffa51f',2)});b.setAttribute('animation','property:material.emissiveIntensity;dir:alternate;loop:true;from:.2;to:3;dur:600');mk('a-cylinder',{position:`${x} 2.95 6.78`,radius:.05,height:.2,material:M('#10181b')})});
+/* pipe valves + gauges */
 /* posters + floor ring */
 const poster=(x,c,t,tc)=>{mk('a-plane',{position:`${x} 2.5 6.93`,rotation:'0 180 0',width:1,height:1.3,material:M(c)});mk('a-text',{value:t,position:`${x} 2.5 6.91`,rotation:'0 180 0',align:'center',width:1.7,color:tc})};
 poster(-5.6,'#e8edf0','LAB RULES\n\n1. No running\n2. Wear gloves\n3. Report leaks\n4. Never open the\n   pod alone','#10181b');poster(5.5,'#ffd25a','CAUTION\n\nBIOHAZARD\nSUBLEVEL 4\n\nAUTHORISED\nSTAFF ONLY','#1a1a1a');
 mk('a-ring',{position:'0 .02 .5',rotation:'-90 0 0','radius-inner':1.55,'radius-outer':1.63,material:E('#ffa51f',.8)});
 /* DATA CHIPS: Voss's recorded logs. Only one shows at a time — collect them in order. */
-const lore=[[.6,1.12,.95,'DATA CHIP 1/4 — Dr. Voss\'s secret recorded logs. Find all four, in order, to learn what really happened here.\n"Day 12: Subject 07 reacts to light, not to sound."'],
-[-2.28,.99,-2.85,'DATA CHIP 2/4 — "Day 29: The splice worked. It opened its eyes and looked at me. Then it copied my face."'],
-[6.5,1.1,.55,'DATA CHIP 3/4 — "Day 38: I used my own cells as the base for Subject 07. I told no one."'],
-[-6.2,.91,6.15,'DATA CHIP 4/4 — "Day 41: If you are reading this, the vial by the exit door is me. Touch it, and the lab will know who you are."']];
-let got=0;const cd=document.createElement('div');cd.className='box';cd.style.cssText='position:fixed;top:300px;right:18px;z-index:5;pointer-events:none;font-size:12px;color:#7fe0ff;max-width:230px;line-height:1.5';document.body.appendChild(cd);
+const lore=[[.6,1.12,.95,"DATA CHIP 1/4 — Dr. Voss's secret recorded logs. Find all four, in order, to learn what really happened here.\n\"Day 12: Mia is getting worse. Subject 07 is the only thing that has ever slowed her illness. The board says it is too dangerous. They don't have a daughter.\""],
+[-2.28,.99,-2.85,"DATA CHIP 2/4 — \"Day 29: The splice worked. It opened its eyes and looked at me. It is learning faster than any model predicted.\""],
+[6.5,1.1,.55,"DATA CHIP 3/4 — \"Day 38: Every donor sample was rejected. So I used my own DNA as the base. I told no one.\""],
+[-6.2,.91,6.15,"DATA CHIP 4/4 — \"Day 41: It is not stable. If you are reading this, shut it down. Tell Mia I was only trying to fix it.\""]];
+let got=0;window.CHIPS=()=>got;const cd=document.createElement('div');cd.className='box';cd.style.cssText='position:fixed;top:176px;right:18px;z-index:5;pointer-events:none;font-size:11px;color:#7fe0ff;padding:6px 12px;opacity:.8';document.body.appendChild(cd);
 const ch=$('#crosshair');
-function showChip(i){cd.innerHTML=`<b>OPTIONAL: VOSS'S SECRET LOGS ${got}/4</b><br>Look for the glowing cyan cube (with the floating label). It tells the story.`;const[x,y,z,m]=lore[i];
- const c=mk('a-box',{position:`${x} ${y} ${z}`,width:.16,height:.16,depth:.16,material:E('#27d3ff',2.6)}),t=mk('a-text',{value:`DATA CHIP ${i+1} of 4\nCLICK ME`,position:`${x} ${y+.4} ${z}`,align:'center',width:2,color:'#7fe0ff','look-at':'[camera]'}),r=mk('a-torus',{position:`${x} ${y} ${z}`,rotation:'90 0 0',radius:.22,'radius-tubular':.01,material:E('#27d3ff',2)});
+function showChip(i){cd.innerHTML=`◆ Voss's logs ${got}/4`;const[x,y,z,m]=lore[i];
+ const c=mk('a-box',{position:`${x} ${y} ${z}`,width:.16,height:.16,depth:.16,material:E('#27d3ff',2.6)}),t=mk('a-text',{value:`DATA CHIP ${i+1} of 4`,position:`${x} ${y+.4} ${z}`,align:'center',width:2,color:'#7fe0ff','look-at':'[camera]'}),r=mk('a-torus',{position:`${x} ${y} ${z}`,rotation:'90 0 0',radius:.22,'radius-tubular':.01,material:E('#27d3ff',2)});
  c.setAttribute('animation','property:rotation;to:0 360 0;dur:3000;loop:true;easing:linear');r.setAttribute('animation','property:scale;dir:alternate;loop:true;to:1.5 1.5 1.5;dur:900');
  c.classList.add('clickable');c.addEventListener('mouseenter',()=>ch.classList.add('hot'));c.addEventListener('mouseleave',()=>ch.classList.remove('hot'));
- c.addEventListener('click',()=>{if(c.dataset.d)return;c.dataset.d=1;c.remove();t.remove();r.remove();ch.classList.remove('hot');got++;tn(800,1600,.2,.12);L.toast(m,9000);if(got<4)showChip(got);else{cd.innerHTML='<b>ALL 4 LOGS FOUND</b>';setTimeout(()=>window.NEXUS('You found all four logs. Voss used his own DNA to build Subject 07. Maybe the vial by the exit knows you...',9000),3000)}})}
+ c.addEventListener('click',()=>{if(c.dataset.d)return;c.dataset.d=1;c.remove();t.remove();r.remove();ch.classList.remove('hot');got++;tn(800,1600,.2,.12);L.toast(m,9000);if(got<4)showChip(got);else{cd.innerHTML='<b>ALL 4 LOGS FOUND</b>';setTimeout(()=>window.NEXUS('You found all four logs. Voss built Subject 07 from his own DNA, trying to save his daughter.',9000),3000)}})}
 showChip(0);
+}})();
+</script>
+
+
+<style>
+#stageBox{display:none!important}
+#meterBox{width:200px!important;padding:6px 10px!important;opacity:.9}
+#objectiveBox{font-size:13px!important;max-width:430px!important;transition:opacity .8s!important}
+a-scene canvas{filter:contrast(1.07) saturate(1.12)}
+#introOverlay{background:radial-gradient(ellipse at center,#0c202a 0%,#04080a 72%)!important}
+#introOverlay h1{font-size:clamp(28px,6vw,58px)!important;letter-spacing:6px!important;animation:fl 5s infinite}
+@keyframes fl{0%,90%,100%{opacity:1}92%{opacity:.35}94%{opacity:1}97%{opacity:.6}}
+</style>
+<script>
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&$('#world')&&$('#world').children.length>25){clearInterval(w);go()}},300);
+function go(){
+const W=$('#world'),mk=(t,a,p)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
+const tex=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);return c.toDataURL()};
+const radial=rgb=>tex(128,128,g=>{const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,`rgba(${rgb},.85)`);r.addColorStop(.35,`rgba(${rgb},.28)`);r.addColorStop(1,`rgba(${rgb},0)`);g.fillStyle=r;g.fillRect(0,0,128,128)});
+const edge=rgb=>tex(8,128,g=>{const r=g.createLinearGradient(0,0,0,128);r.addColorStop(0,`rgba(${rgb},.38)`);r.addColorStop(1,`rgba(${rgb},0)`);g.fillStyle=r;g.fillRect(0,0,8,128)});
+const glow=(src,x,y,z,wd,ht,rot,look)=>{const e=mk('a-plane',{position:`${x} ${y} ${z}`,rotation:rot||'0 0 0',width:wd,height:ht||wd,material:{src,shader:'flat',transparent:true,blending:'additive',depthWrite:false,side:'double',fog:false}});if(look)e.setAttribute('look-at','[camera]');return e};
+/* soft light spilling onto the floor from the wall trim */
+const spill=edge('30,200,255');[[0,-6.5,0],[0,6.5,180],[-6.5,0,90],[6.5,0,-90]].forEach(([x,z,ry])=>{const g=mk('a-entity',{position:`${x} .012 ${z}`,rotation:`0 ${ry} 0`});mk('a-plane',{rotation:'-90 0 0',width:14,height:1.1,material:{src:spill,shader:'flat',transparent:true,blending:'additive',depthWrite:false,fog:false}},g)});
+/* fake bloom around the main light sources */
+glow(radial('57,255,136'),0,1.5,-5.8,3.6,3.6,'0 0 0',true);
+glow(radial('39,211,255'),0,1.7,.5,2.6,2.6,'0 0 0',true);
+glow(radial('31,200,120'),0,3.7,6.7,2.4,1.2,'0 180 0');
+glow(radial('57,255,136'),0,.016,-5.8,4.2,4.2,'-90 0 0');
+glow(radial('39,211,255'),0,.016,.5,3.8,3.8,'-90 0 0');
+glow(radial('57,255,136'),0,2.2,-6.9,5.5,4.4);
+const ceil=[[-3.5,-3],[3.5,-3],[-3.5,3],[3.5,3]].map(([x,z])=>{const e=glow(radial('210,235,255'),x,4.8,z,3.4,3.4,'90 0 0');e.setAttribute('visible',false);return e});
+new MutationObserver(()=>{const t=$('#stageName').textContent;if(t!=='POWER FAILURE'&&t!=='SYSTEM BOOT')ceil.forEach(e=>e.setAttribute('visible',true))}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+/* objective box dims after a while so the screen stays clean */
+const ob=$('#objectiveBox');let ot;new MutationObserver(()=>{ob.style.opacity='';clearTimeout(ot);ot=setTimeout(()=>{ob.style.opacity='.4'},16000)}).observe(ob,{childList:true,characterData:true,subtree:true});
+}})();
+</script>
+
+
+<script>
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&window.CHIPS&&$('#world')&&$('#world').children.length>25){clearInterval(w);go()}},300);
+function go(){
+const W=$('#world'),L=window.LAB,ch=$('#crosshair');
+const mk=(t,a,p)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);(p||W).appendChild(e);return e};
+const M=c=>`color:${c};roughness:.7;metalness:.15`;
+const tex=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);return c.toDataURL()};
+const fl=(e,msg)=>{e.classList.add('clickable');e.addEventListener('click',()=>L.toast(msg,7000));e.addEventListener('mouseenter',()=>ch.classList.add('hot'));e.addEventListener('mouseleave',()=>ch.classList.remove('hot'));return e};
+const hit=(x,y,z,w,h,d,msg)=>fl(mk('a-box',{position:`${x} ${y} ${z}`,width:w,height:h,depth:d,material:'opacity:0;transparent:true'}),msg);
+/* scattered papers, some readable */
+for(let i=0;i<14;i++)mk('a-plane',{position:`${-6+Math.random()*5.5} .014 ${.5+Math.random()*5.5}`,rotation:`-90 0 ${Math.random()*360}`,width:.3,height:.21,material:'color:#e8e4d0;roughness:1;metalness:0'});
+hit(-5.2,.1,4.4,.5,.2,.4,'A crumpled page: "Subject 07 — feeding schedule: none. It does not eat. It absorbs light."');
+hit(-3.8,.1,1.6,.5,.2,.4,'A torn page: "Mia\'s latest scan: no change. The board refused funding again."');
+hit(-1.2,.1,4.8,.5,.2,.4,'A printout: "Response to humans: curious, not hostile. Not yet."');
+mk('a-box',{position:'-5.4 .28 2.1',rotation:'0 20 90',width:.5,height:.06,depth:.5,material:M('#2a3c45')});mk('a-box',{position:'-5.4 .56 1.86',rotation:'0 20 90',width:.06,height:.6,depth:.5,material:M('#2a3c45')});
+hit(-5.4,.4,2.0,.7,.6,.6,'A tipped-over chair. Whoever sat here left in a hurry.');
+/* desk: family photo, mug, sticky note, teddy bear */
+const photo=tex(128,160,(g,w,h)=>{const s=g.createLinearGradient(0,0,0,h*.6);s.addColorStop(0,'#ff9a5a');s.addColorStop(1,'#ffd9a0');g.fillStyle=s;g.fillRect(0,0,w,h);g.fillStyle='#2a6a9a';g.fillRect(0,h*.6,w,h*.4);g.fillStyle='#fff3c0';g.beginPath();g.arc(w*.72,h*.45,16,0,6.3);g.fill();g.fillStyle='#2a2a3a';g.fillRect(36,70,14,40);g.beginPath();g.arc(43,62,9,0,6.3);g.fill();g.fillRect(62,88,10,22);g.beginPath();g.arc(67,82,7,0,6.3);g.fill()});
+mk('a-box',{position:'-6.74 .98 6.2',width:.03,height:.26,depth:.2,material:M('#10181b')});mk('a-plane',{position:'-6.72 .98 6.2',rotation:'0 90 0',width:.17,height:.22,material:{src:photo,shader:'flat'}});
+hit(-6.7,.98,6.2,.15,.3,.26,'A photo of Voss and a little girl on a beach. On the back: "Almost done, sweetheart. One more trial."');
+mk('a-cylinder',{position:'-6.2 .9 5.0',radius:.05,height:.09,material:M('#e8edf0')});mk('a-torus',{position:'-6.15 .9 5.0',rotation:'0 0 0',radius:.03,'radius-tubular':.008,material:M('#e8edf0')});
+hit(-6.2,.92,5.0,.16,.16,.16,'A cold mug of coffee: "WORLD\'S OKAYEST SCIENTIST". The coffee has been here for weeks.');
+mk('a-plane',{position:'-6.612 1.12 5.88',rotation:'0 90 0',width:.09,height:.09,material:'color:#ffe27a;roughness:1;metalness:0'});
+hit(-6.6,1.12,5.88,.1,.12,.12,'Sticky note on the monitor: "Password = her birthday. She turns 8 next month. DON\'T FORGET."');
+mk('a-sphere',{position:'-6.55 .93 5.15',radius:.05,material:M('#b07a4a')});mk('a-sphere',{position:'-6.55 1.0 5.15',radius:.035,material:M('#b07a4a')});[-.03,.03].forEach(z=>mk('a-sphere',{position:`-6.55 1.04 ${5.15+z}`,radius:.013,material:M('#b07a4a')}));
+hit(-6.55,.98,5.15,.14,.2,.14,'A tiny teddy bear. "For Mia" is written on its foot.');
+/* security badge on the cabinet */
+mk('a-box',{position:'-6.3 1.115 -5.55',width:.1,height:.01,depth:.065,material:M('#e8edf0')});mk('a-box',{position:'-6.3 1.122 -5.55',width:.1,height:.004,depth:.02,material:M('#2d8cff')});
+hit(-6.3,1.15,-5.55,.2,.12,.15,'Security badge: VOSS, ALDEN. CLEARANCE: REVOKED.');
+/* shredded hazmat suit */
+const Y=M('#e0a516');mk('a-cylinder',{position:'3.4 .9 6.58',radius:.02,height:1.8,material:M('#6b7f88')});
+mk('a-box',{position:'3.4 1.2 6.55',width:.42,height:.62,depth:.24,material:Y});mk('a-sphere',{position:'3.4 1.68 6.55',radius:.15,material:Y});mk('a-box',{position:'3.4 1.68 6.4',width:.2,height:.1,depth:.02,material:'color:#0a1418;metalness:.8;roughness:.1'});
+[-.1,.1].forEach(x=>mk('a-box',{position:`${3.4+x} .55 6.55`,width:.14,height:.6,depth:.14,material:Y}));
+mk('a-box',{position:'3.13 1.1 6.55',rotation:'0 0 10',width:.1,height:.55,depth:.1,material:Y});mk('a-box',{position:'3.67 1.1 6.55',rotation:'0 0 -10',width:.1,height:.55,depth:.1,material:Y});
+mk('a-box',{position:'3.12 1.12 6.48',rotation:'0 0 10',width:.04,height:.4,depth:.02,material:'color:#5a0a10'});
+hit(3.4,1.1,6.5,.7,1.7,.4,'A hazmat suit. The left sleeve is shredded — from the inside.');
+/* whiteboard + calendar */
+const wb=tex(512,300,(g,w,h)=>{g.fillStyle='#f4f4ee';g.fillRect(0,0,w,h);g.strokeStyle='#999';g.lineWidth=6;g.strokeRect(3,3,w-6,h-6);g.font='bold 34px cursive';g.fillStyle='#1a4f9a';g.fillText('PROJECT 07',20,50);g.font='24px cursive';['Day 12  reacts to light','Day 29  it\'s awake!','Day 38  my DNA = STABLE','Day 41  ???'].forEach((t,i)=>{g.fillStyle=i===3?'#c9303f':'#1a4f9a';g.fillText(t,20,100+i*42)});g.fillStyle='#fff7a8';g.fillRect(300,30,190,120);g.fillStyle='#c9303f';g.font='bold 20px sans-serif';g.fillText('MEMO: PROJECT 07',310,62);g.fillText('CANCELLED.',310,88);g.font='15px sans-serif';g.fillStyle='#333';g.fillText('Destroy all samples.',310,115);g.fillStyle='#c9303f';g.font='bold 30px cursive';g.fillText('NO NO NO NO',290,215);g.fillStyle='#e06a8a';g.font='bold 34px cursive';g.fillText('♥ MIA',330,270)});
+mk('a-plane',{position:'-6.94 2.7 -5.5',rotation:'0 90 0',width:1.9,height:1.1,material:{src:wb,shader:'flat'}});
+fl(mk('a-box',{position:'-6.93 2.7 -5.5',width:.04,height:1.2,depth:2,material:'opacity:0;transparent:true'}),'Whiteboard: a memo reads "PROJECT 07 CANCELLED". Someone wrote "NO NO NO" underneath, over and over.');
+const cal=tex(280,330,(g,w,h)=>{g.fillStyle='#f4f4ee';g.fillRect(0,0,w,h);g.fillStyle='#c9303f';g.fillRect(0,0,w,50);g.fillStyle='#fff';g.font='bold 28px sans-serif';g.fillText('DAY COUNT',60,36);g.font='16px sans-serif';for(let i=0;i<42;i++){const x=12+(i%7)*38,y=84+Math.floor(i/7)*40;g.fillStyle='#333';g.fillText(i+1,x,y);if(i<41){g.strokeStyle='#c9303f';g.lineWidth=3;g.beginPath();g.moveTo(x-3,y-14);g.lineTo(x+22,y+4);g.moveTo(x+22,y-14);g.lineTo(x-3,y+4);g.stroke()}}g.strokeStyle='#c9303f';g.lineWidth=4;g.beginPath();g.arc(12+6*38+8,84+5*40-6,18,0,6.3);g.stroke()});
+mk('a-plane',{position:'6.4 3.0 -6.94',width:.55,height:.65,material:{src:cal,shader:'flat'}});
+fl(mk('a-box',{position:'6.4 3.0 -6.92',width:.6,height:.7,depth:.06,material:'opacity:0;transparent:true'}),'A calendar. Every day is crossed off up to day 41, and the last one is circled in red.');
+/* spilled sample + broken tube near the pod */
+[[1.4,-4.6,.35],[1.05,-4.9,.2],[1.75,-4.9,.14]].forEach(([x,z,r])=>mk('a-circle',{position:`${x} .02 ${z}`,rotation:'-90 0 0',radius:r,material:'color:#39ff88;emissive:#39ff88;emissiveIntensity:.9;opacity:.6;transparent:true'}));
+[[1.2,-4.5,20],[1.5,-4.7,-50]].forEach(([x,z,r])=>mk('a-cylinder',{position:`${x} .04 ${z}`,rotation:`0 ${r} 90`,radius:.03,height:.25,material:'color:#cfe;opacity:.45;transparent:true'}));
+/* claw marks around the vent appear after the creature escapes */
+const claws=[[1.3,15],[1.0,-10],[.7,20]].map(([z,r])=>mk('a-box',{position:`6.96 1.9 ${z}`,rotation:`${r} 0 0`,width:.012,height:.9,depth:.025,visible:false,material:'color:#050707;roughness:1'}));
+new MutationObserver(()=>{if($('#stageName').textContent==='!! ANOMALY !!')claws.forEach(c=>c.setAttribute('visible',true))}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+}})();
+</script>
+
+
+<style>
+#introOverlay{overflow-y:auto;justify-content:safe center!important}
+#relock{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);background:#071014f0;border:1px solid #ffd25a;color:#ffe9a0;padding:8px 20px;font:bold 13px 'Courier New',monospace;letter-spacing:1px;z-index:11;pointer-events:none;display:none}
+</style>
+<div id="relock">CLICK ON THE ROOM TO LOOK AROUND AGAIN</div>
+<script>
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&window.NEXUS&&$('#world')&&$('#world').children.length>25){clearInterval(w);go()}},300);
+function go(){
+const L=window.LAB,W=$('#world');
+/* tell the player when they need to click to look around again */
+setInterval(()=>{const need=!document.pointerLockElement&&!document.querySelector('.overlay.active')&&!$('#modal.active')&&$('#stageName').textContent!=='SYSTEM BOOT'&&!L.st.over&&$('#jsc').style.display!=='block';$('#relock').style.display=need?'block':'none'},400);
+/* gentle hints if the player is stuck */
+const H={'POWER FAILURE':[[120,'The vials on the left wall sit in a coloured row. Copy that colour order on the switches.'],[240,'Order: blue, orange, red. Press the switch with the matching dot colour each time.']],
+'SAMPLE UNSTABLE':[[120,'Click the glowing green sample first. Then pick balls from the small table on the left.'],[240,'He needs the BLUE ball, F the YELLOW ball, Li the RED ball. The periodic table legend explains why.']],
+'MIXTURE UNSTABLE':[[120,'On the periodic table legend, pink means alkali metal. Check the bottle labels.'],[240,'The answer is the bottle labelled Na. Sodium is an alkali metal.']],
+'VENT UNSEALED':[[120,'Sort He, Ne and Ar by their place on the periodic table. Lightest comes first.'],[240,'Press He, then Ne, then Ar.']],
+'OVERRIDE AVAILABLE':[[180,'The notes near the exit door explain the hand scan and the lasers. Voss\'s log and the microscope give the code.'],[420,'Scan: 7-5-3-1-9. Stabiliser: 6. Lasers: right, left, down. Code: 41 then the two digits under the microscope.']]};
+let tms=[];
+/* the periodic table is your friend */
+const pt=[...document.querySelectorAll('a-text')].find(t=>(t.getAttribute('value')||'').startsWith('PERIODIC TABLE OF'));if(pt)pt.setAttribute('value','PERIODIC TABLE — YOUR FRIEND! (use it for the puzzles)');
+const mk=(t,a)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);W.appendChild(e);return e};
+const fr=[[-4.2,4.33,4.9,.05],[-4.2,2.47,4.9,.05],[-6.62,3.4,.05,1.9],[-1.78,3.4,.05,1.9]].map(([x,y,w,h])=>{const e=mk('a-box',{position:`${x} ${y} -6.93`,width:w,height:h,depth:.04,visible:false,material:'color:#ffd25a;emissive:#ffd25a;emissiveIntensity:2'});e.setAttribute('animation','property:material.emissiveIntensity;dir:alternate;loop:true;from:.4;to:3;dur:900');return e});
+Object.assign(H,{'HALLWAY POWER':[[0,'Look at the three coloured lamps on the left wall, top to bottom. Press the fuses in that colour order.'],[0,'The order is green, blue, red.']],'GATE LOCK':[[0,'The BREACH LOG sign tells you when the alarm started. The clock in Lab 07 stopped at that time.'],[0,'The code is 0314.']],'FINAL EXIT':[[0,'Use the chart on the right wall. Gene sequencer slots: He, F, Li.'],[0,'He = 2, F = 9, Li = 3. The code is 293.']]});
+let lvl=0;
+new MutationObserver(()=>{const s=$('#stageName').textContent;tms.forEach(clearTimeout);tms=[];lvl=0;tms.push(setTimeout(()=>{if(!L.st.over&&H[s])window.NEXUS('Stuck? Press H if you want an optional hint.',7000)},150000));
+ const on=['SAMPLE UNSTABLE','MIXTURE UNSTABLE','VENT UNSEALED'].includes(s);fr.forEach(e=>e.setAttribute('visible',on))}).observe($('#stageName'),{childList:true,characterData:true,subtree:true});
+addEventListener('keydown',e=>{if(e.code!=='KeyH'||L.st.over||e.target.tagName==='TEXTAREA')return;const a=H[$('#stageName').textContent];if(!a)return window.NEXUS('No hint needed right now.',3000);window.NEXUS('HINT: '+a[Math.min(lvl,a.length-1)][1],10000);lvl++});
+}})();
+</script>
+
+
+<script>
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&window.NEXUS&&$('#world')&&$('#world').children.length>25){clearInterval(w);go()}},300);
+function go(){
+const W=$('#world'),L=window.LAB,sc=$('#scene'),ch=$('#crosshair');
+const fs=W.children[0].getAttribute('material').src,ws=W.children[2].getAttribute('material').src;
+const HW=document.createElement('a-entity');HW.setAttribute('visible',false);W.appendChild(HW);
+const mk=(t,a,p)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);(p||HW).appendChild(e);return e};
+const M=(c,o)=>`color:${c};roughness:.7;metalness:.2;${o||''}`,E=(c,i)=>`color:${c};emissive:${c};emissiveIntensity:${i||1};roughness:.5`;
+const B=(x,y,z,w,h,d,m,ry,p)=>mk('a-box',{position:`${x} ${y} ${z}`,rotation:`0 ${ry||0} 0`,width:w,height:h,depth:d,material:m},p);
+const T=(v,x,y,z,ry,w,c,p)=>mk('a-text',{value:v,position:`${x} ${y} ${z}`,rotation:`0 ${ry||0} 0`,align:'center',width:w||2,color:c||'#a8d0dc'},p);
+const cl=(e,fn)=>{e.classList.add('clickable');e.addEventListener('click',fn);e.addEventListener('mouseenter',()=>ch.classList.add('hot'));e.addEventListener('mouseleave',()=>ch.classList.remove('hot'));return e};
+const hit=(x,y,z,w,h,d,fn)=>cl(B(x,y,z,w,h,d,'opacity:0;transparent:true'),typeof fn==='string'?()=>L.toast(fn,6500):fn);
+const fade=e=>{e.setAttribute('animation__g','property:scale;to:0 0 0;dur:600;easing:easeInQuad');setTimeout(()=>e.remove(),700)};
+const note=(t,b)=>L.openM(t,'',c=>{const p=document.createElement('p');p.textContent=b;c.appendChild(p)});
+/* shell */
+mk('a-plane',{position:'0 0 21',rotation:'-90 0 0',width:5,height:28,material:{src:fs,repeat:'2.5 14',roughness:.45,metalness:.5}});
+mk('a-plane',{position:'0 4 21',rotation:'90 0 0',width:5,height:28,material:M('#0d1417')});
+[[-2.5,90],[2.5,-90]].forEach(([x,r])=>mk('a-plane',{position:`${x} 2 21`,rotation:`0 ${r} 0`,width:28,height:4,material:{src:ws,repeat:'14 1.6',roughness:.85,metalness:.2}}));
+[[-1.85,2,1.3,4,'.65 1.6'],[1.85,2,1.3,4,'.65 1.6'],[0,3.5,2.4,1,'1.2 .4']].forEach(([x,y,wd,ht,rp])=>mk('a-plane',{position:`${x} ${y} 35`,rotation:'0 180 0',width:wd,height:ht,material:{src:ws,repeat:rp,roughness:.85,metalness:.2}}));
+[-2.46,2.46].forEach(x=>{B(x,.07,21,.06,.1,28,E('#1ec8ff',.9));B(x,3.5,21,.06,.07,28,E('#ff9d1a',.7));B(x,.4,21,.06,.5,28,M('#0b1215'));mk('a-cylinder',{position:`${x*.92} 3.7 21`,rotation:'90 0 0',radius:.07,height:28,material:M(x<0?'#4a5e66':'#6b7f88')})});
+const strips=[10,14,18,22,26,30,33.5].map(z=>B(0,3.95,z,1.6,.05,.4,E('#eaf8ff',.05)));
+const lamps=[12,22,31].map(z=>mk('a-entity',{position:`0 3.4 ${z}`,light:'type:point;color:#dff4ff;intensity:0;distance:14;decay:2'}));
+/* decorative lab doors (locked) */
+const door=(side,z,label,msg)=>{const x=side*2.45,d=-side;B(x,1.15,z,.1,2.3,1.3,M('#141d21'));B(x+d*.04,1.1,z,.06,2.1,1.1,M('#2a363c','metalness:.6'));mk('a-plane',{position:`${x+d*.075} 1.6 ${z}`,rotation:`0 ${d*90} 0`,width:.5,height:.4,material:'color:#0a1418;emissive:#0e2a33;emissiveIntensity:.6'});mk('a-sphere',{position:`${x+d*.08} 1.15 ${z+.45}`,radius:.03,material:E('#ff3b4e',1.5)});T(label,x+d*.09,2.4,z,d*90,1.7,'#ffd25a');hit(x+d*.1,1.1,z,.3,2.3,1.3,msg)};
+[[9.5,'BIO STORAGE','Locked. Through the glass: shelves of sample jars, all empty.'],[14.5,'CRYO LAB 2','Locked. Frost covers the window from the inside.'],[20,'DECON A','Locked. You can hear a shower still running inside.'],[25,'SPECIMEN ARCHIVE','Locked. A sticker reads: "Project 07 files - DESTROYED".'],[31,'SERVER ROOM','Locked. A fan is spinning somewhere behind the door.']].forEach(([z,l,m])=>door(-1,z,l,m));
+[[9.5,'STAFF LOUNGE','Locked. A TV flickers inside. The coffee machine blinks "OUT OF ORDER".'],[14.5,'DR. VOSS — OFFICE','Locked. A child\'s drawing is taped to the door: a stick man holding a little girl\'s hand. "Come home, Daddy."'],[20,'DECON B','Locked. The window is smeared with green handprints.'],[25,'CLEAN ROOM 3','Locked. A warning light inside says: CONTAMINATED.'],[31,'SAFETY OFFICE','Locked. A sign reads: "Report all leaks. Even small ones."']].forEach(([z,l,m])=>door(1,z,l,m));
+/* gates */
+const gate=(z,label)=>{const g=B(0,1.8,z,5,3.6,.2,M('#202c31','metalness:.7'));for(let i=0;i<6;i++)B(0,-1.5+i*.6,-.12,4.9,.1,.02,i%2?E('#ffa51f',.5):M('#111'),0,g);T(label,0,1.5,-.13,180,3,'#ffd25a',g);for(let i=0;i<14;i++)B(-1.4+i*.2,.012,z-.5,.2,.01,.14,i%2?M('#111'):E('#ffa51f',.6));return g};
+const g1=gate(17,'SECURITY GATE 1'),g2=gate(27,'SECURITY GATE 2');
+/* fuse box + lamps (puzzle 1) */
+B(-2.4,1.15,11.5,.14,.9,.75,M('#2a363c','metalness:.5'));B(-2.32,1.15,11.5,.02,.8,.65,M('#10181b'));T('FUSE BOX — HALL POWER',-2.36,2.8,11.5,90,1.8,'#ffd25a');
+[['#2ee58a',2.45],['#2d8cff',2.2],['#ff3b4e',1.95]].forEach(([c,y])=>mk('a-sphere',{position:`-2.38 ${y} 11.5`,radius:.06,material:E(c,2.4)}));
+/* gate keypad (puzzle 2) and exit keypad (puzzle 3) */
+B(2.4,1.3,26.2,.12,.5,.4,M('#10181b'));mk('a-plane',{position:'2.33 1.4 26.2',rotation:'0 -90 0',width:.3,height:.15,material:E('#0f6b4a',1)});T('GATE 2\nKEYPAD',2.32,1.85,26.2,-90,1.2,'#ffd25a');
+B(1.8,1.3,34.9,.4,.5,.12,M('#10181b'));mk('a-plane',{position:'1.8 1.4 34.83',rotation:'0 180 0',width:.3,height:.15,material:E('#0f6b4a',1)});T('EXIT\nKEYPAD',1.8,1.85,34.8,180,1.2,'#ffd25a');
+const exitD=B(0,1.5,34.88,2.4,3,.2,M('#2a3a42','metalness:.7'));for(let i=0;i<5;i++)B(0,-1.2+i*.6,-.12,2.3,.08,.02,i%2?E('#ffa51f',.4):M('#111'),0,exitD);
+B(0,3.45,34.8,1,.28,.05,E('#1f9d5c',1.5));T('EXIT',0,3.45,34.76,180,1.3,'#eafff2');
+const skyT=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),r=g.createRadialGradient(64,64,4,64,64,90);r.addColorStop(0,'#ffffff');r.addColorStop(.5,'#fff7dc');r.addColorStop(1,'#ffe9a8');g.fillStyle=r;g.fillRect(0,0,128,128);return c.toDataURL()})();
+const outside=mk('a-entity',{visible:false});
+mk('a-plane',{position:'0 2 38',rotation:'0 180 0',width:14,height:9,material:{src:skyT,shader:'flat',fog:false}},outside);
+mk('a-plane',{position:'0 .01 36',rotation:'-90 0 0',width:2.4,height:2,material:'color:#fff;emissive:#fff;emissiveIntensity:1.5;shader:flat;fog:false'},outside);
+mk('a-plane',{position:'0 1.5 35.2',rotation:'0 180 0',width:2.8,height:3.4,material:{src:skyT,shader:'flat',transparent:true,blending:'additive',depthWrite:false,fog:false}},outside);
+mk('a-entity',{position:'0 1.8 33.5',light:'type:point;color:#fff6dc;intensity:2.4;distance:12;decay:1.5'},outside);
+/* clue signs */
+const bs1=mk('a-plane',{position:'-2.47 1.9 22.5',rotation:'0 90 0',width:1.5,height:1.1,material:M('#3a0f14')});const bs2=T('BREACH LOG\n\nAlarm triggered at 03:14\n(the clock in Lab 07\nstopped at that time)\n\nGATE 2 CODE = BREACH TIME\n4 digits, no colon',-2.45,1.9,22.5,90,1.3,'#ffd9d9');
+mk('a-plane',{position:'2.47 1.9 29',rotation:'0 -90 0',width:1.5,height:1.3,material:M('#e8edf0')});T('ATOMIC NUMBERS\n1 H   2 He   3 Li\n4 Be   5 B   6 C\n7 N   8 O   9 F\n10 Ne\n\nEXIT CODE =\natomic numbers of the\nGENE SEQUENCER elements\n(left to right)',2.45,1.9,29,-90,1.35,'#10181b');
+const bh=hit(-2.4,1.9,22.5,.2,1.1,1.5,()=>note('BREACH LOG','Alarm triggered at 03:14.\n(The clock in Lab 07 stopped at that time.)\n\nGATE 2 CODE = the breach time.\n4 digits, no colon.'));
+hit(2.4,1.9,29,.2,1.3,1.5,()=>note('ATOMIC NUMBERS','1 H, 2 He, 3 Li, 4 Be, 5 B\n6 C, 7 N, 8 O, 9 F, 10 Ne\n\nEXIT CODE = atomic numbers of the GENE SEQUENCER elements, left to right.'));
+T('SUBLEVEL 4 — EAST CORRIDOR',-2.45,3.0,8.2,90,2.2,'#6b8f9a');T('QUARANTINE ZONE',2.45,3.0,17.2,-90,2,'#ff5e6c');
+/* props: gurney, extinguisher, floor arrows, slime footprints */
+B(1.6,.4,22.3,.7,.1,1.9,M('#9aa4a6'));B(1.6,.5,22.3,.66,.12,1.8,M('#dfe8ea'));[[-.3,-.85],[.3,-.85],[-.3,.85],[.3,.85]].forEach(([x,z])=>mk('a-cylinder',{position:`${1.6+x} .18 ${22.3+z}`,radius:.025,height:.36,material:M('#6b7f88')}));mk('a-circle',{position:'1.6 .565 22.1',rotation:'-90 0 0',radius:.2,material:'color:#2a6a3a;emissive:#1a4a28;emissiveIntensity:.5'});
+hit(1.6,.6,22.3,.8,.5,2,'An empty gurney. The straps have been torn open.');
+mk('a-cylinder',{position:'-2.38 1.0 16.2',radius:.09,height:.45,material:M('#c9303f')});
+[9,18.5,28.5].forEach(z=>mk('a-text',{value:'▼ EXIT ▼',position:`0 .02 ${z}`,rotation:'-90 180 0',align:'center',width:3,color:'#ffa51f'}));
+for(let z=8,i=0;z<34;z+=1.3,i++)mk('a-circle',{position:`${i%2?.35:-.35} .02 ${z}`,rotation:'-90 0 0',radius:.11,scale:'1 1.7 1',material:'color:#39ff88;emissive:#39ff88;emissiveIntensity:.8;opacity:.55;transparent:true'});
+window.HB=[[1.25,1.95,21.3,23.3]];
+/* puzzle windows */
+const pin=(title,sub,len,code,ok)=>{let v='';L.openM(title,sub,c=>{const d=document.createElement('div');d.className='disp';d.textContent=Array(len).fill('_').join(' ');c.appendChild(d);const up=bad=>{d.textContent=v.padEnd(len,'_').split('').join(' ');d.classList.toggle('wrong',!!bad)};const g=document.createElement('div');g.className='grid';[1,2,3,4,5,6,7,8,9,'⌫',0,'↵'].forEach(k=>L.btn(k,()=>{if(k==='⌫')v=v.slice(0,-1);else if(k==='↵'){if(v===code){L.closeM();ok()}else{up(1);L.snd('error');L.cont(2);setTimeout(()=>{v='';up()},500)}return}else if(v.length<len)v+=k;up()},'',g));c.appendChild(g)})};
+const fuses=()=>{let q=[];const need=['green','blue','red'];L.openM('FUSE BOX','Press the fuses in the same order as the lamps on the wall (top to bottom).',c=>{const r=document.createElement('div');r.className='row';[['red','#ff3b4e'],['green','#2ee58a'],['blue','#2d8cff']].forEach(([n,col])=>{const b=L.btn(n.toUpperCase(),()=>{q.push(n);b.style.background=col;b.style.color='#041014';if(n!==need[q.length-1]){L.snd('error');L.cont(2);L.toast('Wrong fuse. The panel resets.');setTimeout(()=>{q=[];r.querySelectorAll('button').forEach(x=>{x.style.background='';x.style.color=''})},500);return}if(q.length===3){L.closeM();powerUp()}},'',r)});c.appendChild(r)})};
+hit(-2.3,1.15,11.5,.2,.9,.9,()=>{if(ph!==1)return L.toast('The fuse box is already working.');fuses()});
+hit(2.3,1.3,26.2,.2,.6,.5,()=>{if(ph<2)return L.toast('Locked. Light the hallway first.');if(ph>2)return L.toast('This gate is already open.');pin('GATE 2 KEYPAD','The 4-digit time from the BREACH LOG.',4,'0314',gate2)});
+hit(1.8,1.3,34.8,.5,.6,.2,()=>{if(ph<3)return L.toast('Locked. Open the gate first.');pin('EXIT KEYPAD','Atomic numbers of the GENE SEQUENCER elements, left to right.',3,'293',finish)});
+/* the story beats */
+let ph=0,fl;
+const open=(g,y)=>g.setAttribute('animation',`property:position;to:0 ${y} ${g.getAttribute('position').z};dur:1800;easing:easeInOutQuad`);
+function powerUp(){ph=2;window.DARK=false;clearInterval(fl);strips.forEach(e=>e.setAttribute('material','emissiveIntensity',1.6));lamps.forEach(l=>l.setAttribute('light','intensity',1));open(g1,5.6);window.HE=26.4;L.snd('power');L.toast('Lights on! Gate 1 is opening.',5000);L.setStage('GATE LOCK','Open the second gate.')}
+function gate2(){ph=3;[bs1,bs2,bh].forEach(fade);open(g2,5.6);window.HE=34.4;L.snd('success');L.toast('Gate 2 is open! The exit is at the end of the corridor.',5000);L.setStage('FINAL EXIT','Open the exit door.')}
+function finish(){ph=4;L.snd('success');open(exitD,5);outside.setAttribute('visible',true);L.toast('The exit door opens. Daylight!',4000);const f=$('#fadeIn');setTimeout(()=>{f.style.transition='opacity 2.2s ease-in';f.style.background='#fff';f.style.opacity=1},900);setTimeout(()=>L.end('#successOverlay','success'),3300);setTimeout(()=>{f.style.transition='none';f.style.opacity=0;f.style.background='#000'},5600)}
+window.HALL={start(){if(ph)return;ph=1;L.st.stage='hall';L.cont(Math.min(0,20-L.st.cont));const k=[...W.children];
+ const blast=k.find(e=>e.tagName==='A-BOX'&&+e.getAttribute('width')===4.2&&+e.getAttribute('height')===3.2);
+ k.filter(e=>e.tagName==='A-BOX'&&+e.getAttribute('width')===4.1&&+e.getAttribute('height')===.08).forEach(e=>e.setAttribute('visible',false));
+ const fin=k.find(e=>e.tagName==='A-ENTITY'&&e.getAttribute('position')&&e.getAttribute('position').z===6.78&&e.getAttribute('position').y===1.3);if(fin)fin.setAttribute('visible',false);
+ const gd=k.find(e=>e.tagName==='A-PLANE'&&+e.getAttribute('height')===3.6);if(gd)gd.setAttribute('visible',false);
+ k[3].setAttribute('visible',false);const mw=(x,y,wd,ht,rx,ry)=>mk('a-plane',{position:`${x} ${y} 7`,rotation:'0 180 0',width:wd,height:ht,material:{src:ws,repeat:`${rx} ${ry}`,roughness:.85,metalness:.2}},W);
+ mw(-4.55,2.5,4.9,5,2.45,2);mw(4.55,2.5,4.9,5,2.45,2);mw(0,4.15,4.2,1.7,2.1,.68);
+ if(blast)blast.setAttribute('animation','property:position;to:0 4.9 6.95;dur:2200;easing:easeInOutQuad');
+ window.HO=true;window.HE=16.4;window.DARK=true;sc.setAttribute('fog','type:exponential;color:#010306;density:.2');HW.setAttribute('visible',true);
+ L.snd('power');L.toast('The blast door slides open. Beyond it, the hallway is pitch black.',6000);L.setStage('HALLWAY POWER','Find the fuse box in the dark hallway.');
+ let n=0;fl=setInterval(()=>{const e=strips[Math.random()*3|0];e.setAttribute('material','emissiveIntensity',1.4);setTimeout(()=>e.setAttribute('material','emissiveIntensity',.05),90)},2600)}};
+}})();
+</script>
+
+
+<script>
+(function(){const $=s=>document.querySelector(s);
+const w=setInterval(()=>{if(window.LAB&&window.NEXUS&&window.HB&&$('#world')){clearInterval(w);go()}},300);
+function go(){
+const W=$('#world'),L=window.LAB;
+/* clue notes disappear once their puzzle is finished */
+const grp=(x,y,z)=>[...W.children].find(e=>{const p=e.tagName==='A-ENTITY'&&e.getAttribute('position');return p&&Math.abs(p.x-x)<.01&&Math.abs(p.y-y)<.01&&Math.abs(p.z-z)<.01});
+const away=e=>{if(!e)return;e.setAttribute('animation__gone','property:scale;to:0 0 0;dur:700;easing:easeInQuad');setTimeout(()=>e.remove(),800)};
+const RM=[[/Sequence complete/,[[-5.3,1.9,-6.94]]],[/Vent sealed/,[[6.95,2.2,-3.3]]],[/SCAN confirmed/,[[-3.9,1.9,6.9]]],[/LASERS confirmed/,[[3.9,1.9,6.9]]],[/STABILISER confirmed/,[[6.2,1.9,-6.94]]],[/CODE confirmed/,[[6.95,2.1,2.6]]]];
+const done=new Set();let told=false;
+new MutationObserver(()=>{const t=$('#toast').textContent;let any=false;
+ RM.forEach(([re,l])=>{if(re.test(t)&&!done.has(re)){done.add(re);l.forEach(q=>away(grp(...q)));any=true}});
+ if(/Compound stabilized/.test(t)&&!done.has('c')){done.add('c');const ro=[...document.querySelectorAll('a-text')].find(x=>(x.getAttribute('value')||'').startsWith('READOUT'));if(ro){away(ro.previousElementSibling);away(ro);any=true}}
+ if(any&&!told){told=true;setTimeout(()=>window.NEXUS('That clue note was put away. Press N to read it again in your notebook.',6000),1800)}}).observe($('#toast'),{childList:true,characterData:true,subtree:true});
+/* notebook (N): your own notes + every clue note you read */
+const clues=[];let mine='';try{mine=localStorage.getItem('lab07notes')||''}catch(e){}
+new MutationObserver(()=>{if(!$('#modal').classList.contains('active'))return;const t=$('#mt').textContent,p=$('#mc p');if(!p||t==='NOTEBOOK')return;if(!clues.find(c=>c[0]===t))clues.push([t,p.textContent])}).observe($('#modal'),{attributes:true,attributeFilter:['class']});
+function nb(){if($('#modal.active')||L.st.over||document.querySelector('.overlay.active')||$('#stageName').textContent==='SYSTEM BOOT')return;
+ L.openM('NOTEBOOK','Write what you want to remember. Notes you read are saved below.',c=>{const ta=document.createElement('textarea');ta.value=mine;ta.rows=6;ta.placeholder='Your notes...';ta.style.cssText="width:100%;box-sizing:border-box;background:#04090b;color:#d8f3fa;border:1px solid #1d4452;font:13px 'Courier New',monospace;padding:8px;resize:vertical";ta.addEventListener('input',()=>{mine=ta.value;try{localStorage.setItem('lab07notes',mine)}catch(e){}});c.appendChild(ta);setTimeout(()=>ta.focus(),60);
+  const d=document.createElement('div');d.style.cssText='margin-top:14px;text-align:left;font-size:12px;line-height:1.5;color:#9ab9c2';const h=document.createElement('b');h.style.color='#27d3ff';h.textContent=clues.length?'CLUES YOU READ':'No clues read yet.';d.appendChild(h);
+  clues.forEach(([t,b])=>{const x=document.createElement('div');x.style.marginTop='9px';const y=document.createElement('b');y.style.color='#ffd25a';y.textContent=t;const z=document.createElement('div');z.style.whiteSpace='pre-line';z.textContent=b;x.appendChild(y);x.appendChild(z);d.appendChild(x)});c.appendChild(d)})}
+addEventListener('keydown',e=>{if(e.code==='KeyN'&&e.target.tagName!=='TEXTAREA')nb()});
 }})();
 </script>
 
